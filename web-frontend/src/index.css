@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+/* 全局样式 - Ant Design 基础 */
+:root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* 算法类别颜色 CSS 变量 */
+:root {
+  --color-swarm: #3B82F6;
+  --color-swarm-light: #60A5FA;
+  --color-swarm-dark: #2563EB;
+
+  --color-evolutionary: #10B981;
+  --color-evolutionary-light: #34D399;
+  --color-evolutionary-dark: #059669;
+
+  --color-physics: #F59E0B;
+  --color-physics-light: #FBBF24;
+  --color-physics-dark: #D97706;
+
+  --color-hybrid: #8B5CF6;
+  --color-hybrid-light: #A78BFA;
+  --color-hybrid-dark: #7C3AED;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 深色模式滚动条 */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* 插画组件样式 */
+.illustration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.illustration svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 插画尺寸 */
+.illustration--sm {
+  width: 120px;
+  height: 90px;
+}
+
+.illustration--md {
+  width: 200px;
+  height: 150px;
+}
+
+.illustration--lg {
+  width: 320px;
+  height: 240px;
+}
+
+.illustration--xl {
+  width: 480px;
+  height: 360px;
+}
+
+/* 空状态样式 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+}
+
+.empty-state .ant-typography {
+  margin-top: 16px;
+}
+
+.empty-state .ant-btn {
+  margin-top: 24px;
+}
+
+/* 结果页面样式 */
+.result-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 48px;
+}
+
+/* 加载状态样式 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 32px;
+}
+
+/* 页面过渡动画 */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+.page-exit {
+  opacity: 1;
+}
+
+.page-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+/* 卡片悬停效果 */
+.ant-card-hoverable {
+  transition: all 0.3s ease;
+}
+
+.ant-card-hoverable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .illustration--lg {
+    width: 280px;
+    height: 210px;
+  }
+
+  .illustration--xl {
+    width: 320px;
+    height: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .illustration--xl {
+    width: 400px;
+    height: 300px;
+  }
+}
+
+/* 算法类别标签样式 */
+.algorithm-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.algorithm-tag--swarm {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.algorithm-tag--evolutionary {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.algorithm-tag--physics {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.algorithm-tag--hybrid {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+/* 深色模式算法标签 */
+.dark .algorithm-tag--swarm {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #60A5FA;
+}
+
+.dark .algorithm-tag--evolutionary {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+}
+
+.dark .algorithm-tag--physics {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+}
+
+.dark .algorithm-tag--hybrid {
+  background-color: rgba(139, 92, 246, 0.2);
+  color: #A78BFA;
+}
