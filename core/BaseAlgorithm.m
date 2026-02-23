@@ -16,7 +16,7 @@ classdef (Abstract) BaseAlgorithm < handle
     %       end
     %   end
     %
-    % 作者: 元启发式算法工程规范委员会
+    % 作者：RUOFENG YU
     % 版本: 1.0.0
     % 日期: 2025
 
@@ -203,6 +203,114 @@ classdef (Abstract) BaseAlgorithm < handle
             % 子类应覆盖 PARAM_SCHEMA 常量以提供参数元数据
 
             schema = BaseAlgorithm.PARAM_SCHEMA;
+        end
+
+        function validatedConfig = validateFromSchema(config, schema)
+            % validateFromSchema 基于Schema的通用配置验证
+            %
+            % 从PARAM_SCHEMA常量自动验证所有参数，消除15个算法中
+            % 重复的validateConfig()实现。
+            %
+            % 输入参数:
+            %   config - 原始配置结构体
+            %   schema - 参数schema结构体
+            %
+            % 输出参数:
+            %   validatedConfig - 验证后的配置结构体
+            %
+            % Schema格式:
+            %   schema.fieldName.type - 参数类型: 'integer', 'double', 'boolean', 'string'
+            %   schema.fieldName.default - 默认值
+            %   schema.fieldName.min - 最小值 (可选，用于数值类型)
+            %   schema.fieldName.max - 最大值 (可选，用于数值类型)
+            %   schema.fieldName.description - 参数描述 (可选)
+            %
+            % 使用示例:
+            %   在子类的validateConfig()中:
+            %   function validatedConfig = validateConfig(obj, config)
+            %       validatedConfig = BaseAlgorithm.validateFromSchema(config, MyAlgorithm.PARAM_SCHEMA);
+            %   end
+
+            validatedConfig = struct();
+
+            % 如果schema为空，直接返回原始config
+            if isempty(fieldnames(schema))
+                % 合并默认配置
+                validatedConfig = config;
+                return;
+            end
+
+            % 遍历schema中的所有字段
+            fn = fieldnames(schema);
+            for i = 1:length(fn)
+                fieldName = fn{i};
+                fieldSchema = schema.(fieldName);
+
+                % 获取值或使用默认值
+                if isfield(config, fieldName)
+                    value = config.(fieldName);
+                else
+                    if isfield(fieldSchema, 'default')
+                        value = fieldSchema.default;
+                    else
+                        error('BaseAlgorithm:MissingRequiredParam', ...
+                            'Required parameter ''%s'' is missing', fieldName);
+                    end
+                end
+
+                % 验证类型
+                if isfield(fieldSchema, 'type')
+                    fieldType = fieldSchema.type;
+
+                    switch fieldType
+                        case 'integer'
+                            validateattributes(value, {'numeric'}, ...
+                                {'scalar', 'integer'});
+                            if isfield(fieldSchema, 'min')
+                                validateattributes(value, {'numeric'}, ...
+                                    {'scalar', '>=', fieldSchema.min});
+                            end
+                            if isfield(fieldSchema, 'max')
+                                validateattributes(value, {'numeric'}, ...
+                                    {'scalar', '<=', fieldSchema.max});
+                            end
+                            value = int64(value);
+
+                        case 'double'
+                            validateattributes(value, {'numeric'}, {'scalar'});
+                            if isfield(fieldSchema, 'min')
+                                validateattributes(value, {'numeric'}, ...
+                                    {'scalar', '>=', fieldSchema.min});
+                            end
+                            if isfield(fieldSchema, 'max')
+                                validateattributes(value, {'numeric'}, ...
+                                    {'scalar', '<=', fieldSchema.max});
+                            end
+
+                        case 'boolean'
+                            validateattributes(value, {'logical'}, {'scalar'});
+
+                        case 'string'
+                            validateattributes(value, {'char', 'string'}, {'scalar'});
+
+                        otherwise
+                            error('BaseAlgorithm:UnknownType', ...
+                                'Unknown parameter type: %s', fieldType);
+                    end
+                end
+
+                validatedConfig.(fieldName) = value;
+            end
+
+            % 添加config中不在schema里的额外字段（保持向后兼容）
+            configFields = fieldnames(config);
+            schemaFields = fieldnames(schema);
+            for i = 1:length(configFields)
+                fieldName = configFields{i};
+                if ~isfield(validatedConfig, fieldName)
+                    validatedConfig.(fieldName) = config.(fieldName);
+                end
+            end
         end
     end
 end

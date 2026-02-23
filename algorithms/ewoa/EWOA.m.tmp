@@ -245,8 +245,10 @@ classdef EWOA < BaseAlgorithm
         end
 
         function pos = boundConstraint(obj, pos, lb, ub)
-            % 边界约束（使用统一的BoundaryHandler）
-            pos = shared.utils.BoundaryHandler.quickClip(pos, lb, ub);
+            % 边界约束
+            flagUb = pos > ub;
+            flagLb = pos < lb;
+            pos = pos .* ~(flagUb | flagLb) + ub .* flagUb + lb .* flagLb;
         end
 
         function tf = shouldStop(obj)

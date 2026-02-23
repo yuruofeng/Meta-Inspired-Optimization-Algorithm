@@ -17,7 +17,7 @@ classdef AlgorithmRegistry < handle
     %   % 列出所有算法
     %   algorithms = AlgorithmRegistry.listAlgorithms();
     %
-    % 作者: 元启发式算法工程规范委员会
+    % 作者：RUOFENG YU
     % 版本: 1.0.0
     % 日期: 2025
 

@@ -2,7 +2,7 @@
 
 **版本**: 2.0.0
 **发布日期**: 2025
-**维护团队**: 元启发式算法工程规范委员会
+**作者**: RUOFENG YU
 
 ---
 
@@ -73,7 +73,7 @@
 │   ├── OptimizationResult.m       # 统一结果结构
 │   └── AlgorithmRegistry.m        # 算法注册表
 │
-├── algorithms/                    # 算法实现 (13个)
+├── algorithms/                    # 算法实现 (15个)
 │   ├── alo/                       # 蚁狮优化器
 │   ├── gwo/                       # 灰狼优化器
 │   ├── igwo/                      # 改进灰狼优化器
@@ -86,7 +86,9 @@
 │   ├── sa/                        # 模拟退火
 │   ├── vpso/                      # 变速度粒子群
 │   ├── vppso/                     # 变参数粒子群
-│   └── woa-sa/                    # 鲸鱼-模拟退火混合
+│   ├── woa-sa/                    # 鲸鱼-模拟退火混合
+│   ├── mfo/                       # 飞蛾火焰优化
+│   └── mvo/                       # 多元宇宙优化器
 │
 ├── problems/                      # 问题定义
 │   └── benchmark/
@@ -94,6 +96,7 @@
 │
 ├── utils/                         # 工具函数
 │   ├── Initialization.m           # 种群初始化
+│   ├── RouletteWheelSelection.m   # 轮盘赌选择
 │   └── BoundConstraint.m          # 边界约束
 │
 ├── web-frontend/                  # Web前端
@@ -148,6 +151,8 @@
 | VPSO | Variable Velocity PSO | 群智能 | - |
 | VPPSO | Variable Parameter PSO | 群智能 | - |
 | WOASA | WOA-SA Hybrid | 混合 | - |
+| MFO | Moth-Flame Optimization | 群智能 | Mirjalili, 2015 |
+| MVO | Multi-Verse Optimizer | 群智能 | Mirjalili, 2016 |
 
 ---
 
@@ -373,5 +378,5 @@ disp(list);
 
 ---
 
-**维护团队**: 元启发式算法工程规范委员会
+**作者**: RUOFENG YU
 **最后更新**: 2025

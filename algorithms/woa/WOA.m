@@ -128,11 +128,8 @@ classdef WOA < BaseAlgorithm
 
             % 边界检查并评估适应度
             for i = 1:N
-                % 边界约束
-                flagUb = obj.positions(i, :) > ub;
-                flagLb = obj.positions(i, :) < lb;
-                obj.positions(i, :) = obj.positions(i, :) .* ~(flagUb | flagLb) + ...
-                    ub .* flagUb + lb .* flagLb;
+                % 边界约束（使用统一的BoundaryHandler）
+                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
 
                 % 评估适应度
                 fitness = obj.evaluateSolution(obj.positions(i, :));

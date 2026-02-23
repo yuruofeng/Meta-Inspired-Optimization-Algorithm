@@ -294,7 +294,9 @@ classdef DA < BaseAlgorithm
                 obj.stepVectors(i, :) = min(obj.stepVectors(i, :), obj.maxStep);
 
                 % 边界检查
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
+                flagUb = obj.positions(i, :) > ub;
+                flagLb = obj.positions(i, :) < lb;
+                obj.positions(i, :) = obj.positions(i, :) .* ~(flagUb | flagLb) + ub .* flagUb + lb .* flagLb;
             end
 
             % 更新全局最优

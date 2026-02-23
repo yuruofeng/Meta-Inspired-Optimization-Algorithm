@@ -7,7 +7,7 @@ function registerAllAlgorithms()
 % 用法:
 %   registerAllAlgorithms()
 %
-% 作者: 元启发式算法工程规范委员会
+% 作者：RUOFENG YU
 % 版本: 1.0.0
 % 日期: 2025
 
@@ -16,6 +16,8 @@ function registerAllAlgorithms()
     ALO.register();    % 蚁狮优化器
     WOA.register();    % 鲸鱼优化算法
     DA.register();     % 蜻蜓算法
+    MFO.register();    % 飞蛾火焰优化算法
+    MVO.register();    % 多元宇宙优化器
 
     % 改进算法
     IGWO.register();   % 改进灰狼优化器

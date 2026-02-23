@@ -50,7 +50,7 @@ function X = Initialization(SearchAgents_no, dim, ub, lb)
     %
     % 版本: 2.0.0 (统一版本)
     % 日期: 2025
-    % 维护: 元启发式算法工程规范委员会
+    % 作者：RUOFENG YU
 
     % 输入验证
     validateattributes(SearchAgents_no, {'numeric'}, ...

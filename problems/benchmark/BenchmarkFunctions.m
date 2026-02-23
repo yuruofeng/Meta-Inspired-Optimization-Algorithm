@@ -28,7 +28,7 @@ classdef BenchmarkFunctions < handle
     % 原始作者: Seyedali Mirjalili
     % 整合版本: 2.0.0
     % 日期: 2025
-    % 维护: 元启发式算法工程规范委员会
+    % 作者：RUOFENG YU
 
     properties (Constant)
         FUNCTION_LIST = {'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', ...

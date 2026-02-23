@@ -243,17 +243,11 @@ classdef ALO < BaseAlgorithm
             %   lb - 下边界
             %   ub - 上边界
 
-            N = size(obj.antPositions, 1);
 
-            for i = 1:N
-                % 上边界违反
-                flagUb = obj.antPositions(i, :) > ub;
-                % 下边界违反
-                flagLb = obj.antPositions(i, :) < lb;
-
-                % 修复边界
-                obj.antPositions(i, :) = obj.antPositions(i, :) .* ...
-                    ~(flagUb | flagLb) + ub .* flagUb + lb .* flagLb;
+            % 使用统一的边界处理器进行边界约束
+            for i = 1:size(obj.antPositions, 1)
+                obj.antPositions(i, :) = shared.utils.BoundaryHandler.quickClip(...
+                    obj.antPositions(i, :), lb, ub);
             end
         end
     end

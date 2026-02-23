@@ -21,7 +21,7 @@ classdef OptimizationResult < handle
     %       'elapsedTime', 3.72);
     %   disp(result);
     %
-    % 作者: 元启发式算法工程规范委员会
+    % 作者：RUOFENG YU
     % 版本: 1.0.0
     % 日期: 2025
 
