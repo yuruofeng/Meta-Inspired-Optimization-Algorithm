@@ -44,7 +44,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                 算法引擎 (MATLAB)                            │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │ 13种算法 │ 23个基准函数 │ 统一结果结构 │ 注册表机制 │  │
+│  │ 17种算法 │ 23个基准函数 │ 统一结果结构 │ 注册表机制 │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -73,7 +73,7 @@
 │   ├── OptimizationResult.m       # 统一结果结构
 │   └── AlgorithmRegistry.m        # 算法注册表
 │
-├── algorithms/                    # 算法实现 (15个)
+├── algorithms/                    # 算法实现 (17个)
 │   ├── alo/                       # 蚁狮优化器
 │   ├── gwo/                       # 灰狼优化器
 │   ├── igwo/                      # 改进灰狼优化器
@@ -88,7 +88,9 @@
 │   ├── vppso/                     # 变参数粒子群
 │   ├── woa-sa/                    # 鲸鱼-模拟退火混合
 │   ├── mfo/                       # 飞蛾火焰优化
-│   └── mvo/                       # 多元宇宙优化器
+│   ├── mvo/                       # 多元宇宙优化器
+│   ├── sca/                       # 正弦余弦算法
+│   └── ssa/                       # 樽海鞘群算法
 │
 ├── problems/                      # 问题定义
 │   └── benchmark/
@@ -116,12 +118,31 @@
 │   └── requirements.txt
 │
 ├── examples/                      # 示例脚本
-│   ├── demo_gwo.m
-│   ├── demo_igwo.m
-│   └── comparison.m
+│   ├── demo_gwo.m                 # 灰狼优化器演示
+│   ├── demo_igwo.m                # 改进灰狼演示
+│   ├── demo_alo.m                 # 蚁狮优化器演示
+│   ├── demo_woa.m                 # 鲸鱼优化演示
+│   ├── demo_mfo.m                 # 飞蛾火焰演示
+│   ├── demo_mvo.m                 # 多元宇宙演示
+│   ├── demo_sca.m                 # 正弦余弦演示
+│   ├── demo_ssa.m                 # 樽海鞘群演示
+│   ├── demo_ga.m                  # 遗传算法演示
+│   ├── demo_sa.m                  # 模拟退火演示
+│   ├── demo_vpso.m                # 变速度PSO演示
+│   ├── demo_vppso.m               # 变参数PSO演示
+│   └── comparison.m               # 算法对比示例
 │
 ├── tests/                         # 测试脚本
-│   └── quick_validation.m
+│   ├── run_all_tests.m            # 运行所有测试
+│   ├── quick_validation.m         # 快速验证
+│   ├── quick_validation_sca_ssa.m # SCA/SSA验证
+│   ├── test_mfo_mvo.m             # MFO/MVO测试
+│   └── unit/                      # 单元测试
+│       ├── GWOTest.m
+│       ├── MFOTest.m
+│       ├── MVOTest.m
+│       ├── SCATest.m
+│       └── SSATest.m
 │
 ├── start.bat                      # Windows一键启动
 ├── start.sh                       # Linux/macOS一键启动
@@ -135,6 +156,8 @@
 ---
 
 ## 已实现算法
+
+本项目共实现 **17** 种元启发式优化算法：
 
 | 算法 | 全称 | 类别 | 参考文献 |
 |------|------|------|----------|
@@ -153,6 +176,8 @@
 | WOASA | WOA-SA Hybrid | 混合 | - |
 | MFO | Moth-Flame Optimization | 群智能 | Mirjalili, 2015 |
 | MVO | Multi-Verse Optimizer | 群智能 | Mirjalili, 2016 |
+| **SCA** | **Sine Cosine Algorithm** | **群智能** | **Mirjalili, 2016** |
+| **SSA** | **Salp Swarm Algorithm** | **群智能** | **Mirjalili, 2017** |
 
 ---
 
@@ -232,13 +257,71 @@ problem.dim = dim;
 % 3. 配置算法
 config = struct('populationSize', 30, 'maxIterations', 500);
 
-% 4. 运行优化
+% 4. 运行优化 - 灰狼优化器
 gwo = GWO(config);
 result = gwo.run(problem);
+
+% 或使用正弦余弦算法
+sca = SCA(config);
+result = sca.run(problem);
+
+% 或使用樽海鞘群算法
+ssa = SSA(config);
+result = ssa.run(problem);
 
 % 5. 查看结果
 result.display();
 result.plotConvergence();
+```
+
+### 新增算法使用示例
+
+**正弦余弦算法 (SCA)**:
+```matlab
+% SCA 特有参数: a - 控制探索/开发平衡
+config = struct(...
+    'populationSize', 30, ...
+    'maxIterations', 500, ...
+    'a', 2 ...  % 默认值，范围[0, 10]
+);
+sca = SCA(config);
+result = sca.run(problem);
+```
+
+**樽海鞘群算法 (SSA)**:
+```matlab
+% SSA 基本参数
+config = struct(...
+    'populationSize', 30, ...
+    'maxIterations', 500 ...
+);
+ssa = SSA(config);
+result = ssa.run(problem);
+```
+
+**多元宇宙优化器 (MVO)**:
+```matlab
+% MVO 特有参数: WEP_Min/WEP_Max - 虫洞存在概率范围
+config = struct(...
+    'populationSize', 30, ...
+    'maxIterations', 500, ...
+    'WEP_Min', 0.2, ...  % 最小虫洞存在概率
+    'WEP_Max', 1.0 ...   % 最大虫洞存在概率
+);
+mvo = MVO(config);
+result = mvo.run(problem);
+```
+
+**飞蛾火焰优化 (MFO)**:
+```matlab
+% MFO 特有参数: b - 对数螺旋形状常数
+config = struct(...
+    'populationSize', 30, ...
+    'maxIterations', 500, ...
+    'b', 1 ...  % 默认值，范围[0, 10]
+);
+mfo = MFO(config);
+result = mfo.run(problem);
 ```
 
 ---
@@ -371,7 +454,7 @@ disp(list);
 
 本项目的算法实现基于以下研究者的原创工作：
 
-- **Seyedali Mirjalili** - ALO, GWO, WOA, DA, BBA等算法发明者
+- **Seyedali Mirjalili** - ALO, GWO, WOA, DA, BBA, MFO, MVO, SCA, SSA 等算法发明者
 - **M. H. Nadimi-Shahraki et al.** - IGWO, EWOA算法发明者
 
 感谢他们为元启发式优化领域做出的贡献。
@@ -379,4 +462,4 @@ disp(list);
 ---
 
 **作者**: RUOFENG YU
-**最后更新**: 2025
+**最后更新**: 2025年2月
