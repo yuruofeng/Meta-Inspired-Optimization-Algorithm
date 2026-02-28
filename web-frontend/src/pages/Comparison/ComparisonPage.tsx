@@ -205,8 +205,8 @@ export function ComparisonPage() {
   return (
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24 }}>
-        <Title level={2} style={{ marginBottom: 8 }}>算法对比</Title>
-        <Text type="secondary">选择多个算法进行性能对比分析</Text>
+        <Title level={2} style={{ marginBottom: 8 }}>单目标优化对比</Title>
+        <Text type="secondary">选择多个单目标优化算法进行性能对比分析（如需多目标优化对比，请使用"多目标对比"功能）</Text>
       </div>
 
       <Row gutter={[24, 24]}>

@@ -8,6 +8,7 @@ import {
   SettingOutlined,
   SunOutlined,
   MoonOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 import { useUIStore, type PageName } from '../../../stores';
 
@@ -24,7 +25,12 @@ const menuItems: MenuItem[] = [
   {
     key: 'comparison',
     icon: <SwapOutlined />,
-    label: '算法对比',
+    label: '单目标对比',
+  },
+  {
+    key: 'moComparison',
+    icon: <ApartmentOutlined />,
+    label: '多目标对比',
   },
   {
     key: 'optimize',
@@ -68,7 +74,6 @@ export function AppSidebar() {
       }}
       trigger={null}
     >
-      {/* Logo 区域 */}
       <div
         style={{
           height: 64,
@@ -103,7 +108,6 @@ export function AppSidebar() {
         )}
       </div>
 
-      {/* 导航菜单 */}
       <Menu
         theme="dark"
         mode="inline"
@@ -115,7 +119,6 @@ export function AppSidebar() {
         aria-label="主导航菜单"
       />
 
-      {/* 底部主题切换 */}
       <div
         style={{
           position: 'absolute',

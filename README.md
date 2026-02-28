@@ -1,23 +1,24 @@
 # 元启发式优化算法平台
 
-**版本**: 2.0.0
-**发布日期**: 2025
+**版本**: 2.1.0
+**发布日期**: 2026年3月
 **作者**: RUOFENG YU
 
 ---
 
 ## 项目简介
 
-本项目是一个符合工业规范的元启发式优化算法平台，实现了多种经典和改进算法，提供统一的接口、完善的测试、丰富的文档，以及现代化的Web可视化界面。
+本项目是一个符合工业规范的元启发式优化算法平台，实现了多种经典和改进算法，提供统一的接口、完善的测试、丰富的文档，以及现代化的Web可视化界面。支持**单目标优化**和**多目标优化**两大类问题。
 
 ### 核心特性
 
-- 🎯 **统一接口**: 所有算法继承 `BaseAlgorithm` 基类，遵循相同的使用模式
+- 🎯 **统一接口**: 所有算法继承 `BaseAlgorithm`/`MOBaseAlgorithm` 基类，遵循相同的使用模式
 - 🔌 **可扩展性**: 采用注册表模式，新增算法无需修改核心代码
 - 📊 **Web可视化**: 现代化React前端，支持算法对比、参数调整、实时进度
 - 🚀 **RESTful API**: FastAPI后端，支持单次优化、批量任务、WebSocket实时通信
 - ✅ **高质量**: 代码符合 `metaheuristic_spec.md` 规范，包含完整文档
-- 📈 **标准测试**: 包含23个国际通用基准测试函数
+- 📈 **标准测试**: 单目标23个 + 多目标13个国际通用基准测试函数
+- 🔬 **多目标支持**: 5种多目标优化算法，支持ZDT/DTLZ测试集和完整性能指标
 
 ---
 
@@ -27,7 +28,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                     Web前端 (React 19)                       │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │
-│  │ 首页    │  │算法对比 │  │单次优化 │  │历史记录 │        │
+│  │ 首页    │  │单目标对比│  │多目标对比│  │历史记录 │        │
 │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘        │
 │       └────────────┴────────────┴────────────┘              │
 │                         │ HTTP/WebSocket                     │
@@ -44,7 +45,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                 算法引擎 (MATLAB)                            │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │ 17种算法 │ 23个基准函数 │ 统一结果结构 │ 注册表机制 │  │
+│  │ 25种算法 │ 单目标+多目标 │ ZDT/DTLZ测试集 │ 性能指标 │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -69,11 +70,13 @@
 ```
 元启发优化算法验证/
 ├── core/                          # 核心基础设施
-│   ├── BaseAlgorithm.m            # 抽象基类
-│   ├── OptimizationResult.m       # 统一结果结构
+│   ├── BaseAlgorithm.m            # 单目标算法抽象基类
+│   ├── MOBaseAlgorithm.m          # 多目标算法抽象基类
+│   ├── OptimizationResult.m       # 单目标优化结果结构
+│   ├── MOOptimizationResult.m     # 多目标优化结果结构
 │   └── AlgorithmRegistry.m        # 算法注册表
 │
-├── algorithms/                    # 算法实现 (17个)
+├── algorithms/                    # 算法实现 (25个)
 │   ├── alo/                       # 蚁狮优化器
 │   ├── gwo/                       # 灰狼优化器
 │   ├── igwo/                      # 改进灰狼优化器
@@ -90,22 +93,43 @@
 │   ├── mfo/                       # 飞蛾火焰优化
 │   ├── mvo/                       # 多元宇宙优化器
 │   ├── sca/                       # 正弦余弦算法
-│   └── ssa/                       # 樽海鞘群算法
+│   ├── ssa/                       # 樽海鞘群算法
+│   ├── goa/                       # 蚱蜢优化算法
+│   ├── psogsa/                    # 混合PSO-GSA算法
+│   ├── hlbda/                     # 超学习二进制蜻蜓算法
+│   └── mo/                        # 多目标优化算法
+│       ├── MOALO.m                # 多目标蚁狮优化器
+│       ├── MODA.m                 # 多目标蜻蜓算法
+│       ├── MOGOA.m                # 多目标蚱蜢优化算法
+│       ├── MOGWO.m                # 多目标灰狼优化器
+│       ├── MSSA.m                 # 多目标樽海鞘群算法
+│       └── operators/             # 多目标操作符
+│           ├── DominanceOperator.m
+│           └── ArchiveManager.m
 │
 ├── problems/                      # 问题定义
 │   └── benchmark/
-│       └── BenchmarkFunctions.m   # 23个基准测试函数
+│       ├── BenchmarkFunctions.m   # 23个单目标基准测试函数
+│       ├── MOBenchmarkProblems.m  # 13个多目标测试问题 (ZDT/DTLZ)
+│       └── MOMetrics.m            # 多目标性能评价指标
 │
 ├── utils/                         # 工具函数
-│   ├── Initialization.m           # 种群初始化
-│   ├── RouletteWheelSelection.m   # 轮盘赌选择
-│   └── BoundConstraint.m          # 边界约束
+│   └── Initialization.m           # 种群初始化
+│
+├── shared/                        # 共享模块
+│   ├── operators/                 # 共享算子
+│   │   ├── crossover/             # 交叉算子
+│   │   └── selection/             # 选择算子
+│   ├── templates/                 # 模板
+│   └── utils/                     # 工具类
 │
 ├── web-frontend/                  # Web前端
 │   ├── src/
 │   │   ├── api/                   # API客户端
 │   │   ├── components/            # UI组件
 │   │   ├── pages/                 # 页面
+│   │   │   ├── Comparison/        # 单目标对比
+│   │   │   └── MOComparison/      # 多目标对比
 │   │   ├── stores/                # 状态管理
 │   │   └── types/                 # TypeScript类型
 │   ├── package.json
@@ -118,38 +142,28 @@
 │   └── requirements.txt
 │
 ├── examples/                      # 示例脚本
-│   ├── demo_gwo.m                 # 灰狼优化器演示
-│   ├── demo_igwo.m                # 改进灰狼演示
-│   ├── demo_alo.m                 # 蚁狮优化器演示
-│   ├── demo_woa.m                 # 鲸鱼优化演示
-│   ├── demo_mfo.m                 # 飞蛾火焰演示
-│   ├── demo_mvo.m                 # 多元宇宙演示
-│   ├── demo_sca.m                 # 正弦余弦演示
-│   ├── demo_ssa.m                 # 樽海鞘群演示
-│   ├── demo_ga.m                  # 遗传算法演示
-│   ├── demo_sa.m                  # 模拟退火演示
-│   ├── demo_vpso.m                # 变速度PSO演示
-│   ├── demo_vppso.m               # 变参数PSO演示
+│   ├── demo_*.m                   # 各算法演示
+│   ├── demo_moalgorithms.m        # 多目标算法演示
 │   └── comparison.m               # 算法对比示例
 │
 ├── tests/                         # 测试脚本
 │   ├── run_all_tests.m            # 运行所有测试
-│   ├── quick_validation.m         # 快速验证
-│   ├── quick_validation_sca_ssa.m # SCA/SSA验证
-│   ├── test_mfo_mvo.m             # MFO/MVO测试
 │   └── unit/                      # 单元测试
-│       ├── GWOTest.m
-│       ├── MFOTest.m
-│       ├── MVOTest.m
-│       ├── SCATest.m
-│       └── SSATest.m
+│       ├── GOATest.m
+│       ├── PSOGSATest.m
+│       ├── HLBDATest.m
+│       ├── MOAlgorithmTest.m      # 多目标算法测试
+│       └── ...
 │
-├── start.bat                      # Windows一键启动
-├── start.sh                       # Linux/macOS一键启动
-├── stop.bat                       # Windows停止脚本
-├── stop.sh                        # Linux/macOS停止脚本
+├── scripts/                       # 启动脚本
+│   ├── start.bat                  # Windows启动
+│   └── stop.bat                   # Windows停止
+│
+├── docs/                          # 文档
+│   └── MO_INTEGRATION_REPORT.md   # 多目标集成报告
+│
 ├── README.md                      # 本文件
-├── CHANGELOG.md                   # 版本变更记录
+├── CONDA_SETUP_GUIDE.md           # Conda环境配置指南
 └── metaheuristic_spec.md          # 开发规范
 ```
 
@@ -157,7 +171,9 @@
 
 ## 已实现算法
 
-本项目共实现 **17** 种元启发式优化算法：
+本项目共实现 **25** 种元启发式优化算法：
+
+### 单目标优化算法 (20个)
 
 | 算法 | 全称 | 类别 | 参考文献 |
 |------|------|------|----------|
@@ -176,8 +192,67 @@
 | WOASA | WOA-SA Hybrid | 混合 | - |
 | MFO | Moth-Flame Optimization | 群智能 | Mirjalili, 2015 |
 | MVO | Multi-Verse Optimizer | 群智能 | Mirjalili, 2016 |
-| **SCA** | **Sine Cosine Algorithm** | **群智能** | **Mirjalili, 2016** |
-| **SSA** | **Salp Swarm Algorithm** | **群智能** | **Mirjalili, 2017** |
+| SCA | Sine Cosine Algorithm | 群智能 | Mirjalili, 2016 |
+| SSA | Salp Swarm Algorithm | 群智能 | Mirjalili, 2017 |
+| GOA | Grasshopper Optimization Algorithm | 群智能 | Saremi, 2017 |
+| PSOGSA | Hybrid PSO-GSA Algorithm | 混合 | Mirjalili, 2010 |
+| HLBDA | Hyper Learning Binary Dragonfly Algorithm | 群智能 | 2024 |
+
+### 多目标优化算法 (5个)
+
+| 算法 | 全称 | 参考文献 |
+|------|------|----------|
+| MOALO | Multi-Objective Ant Lion Optimizer | Mirjalili, 2016 |
+| MODA | Multi-Objective Dragonfly Algorithm | Mirjalili, 2016 |
+| MOGOA | Multi-Objective Grasshopper Optimization | Mirjalili, 2017 |
+| MOGWO | Multi-Objective Grey Wolf Optimizer | Mirjalili, 2016 |
+| MSSA | Multi-Objective Salp Swarm Algorithm | Mirjalili, 2017 |
+
+---
+
+## 测试问题集
+
+### 单目标基准函数 (23个)
+
+| 函数 | 类型 | 维度 | 最优值 |
+|------|------|------|--------|
+| F1-F7 | 单峰 | 30 | 0 |
+| F8-F13 | 多峰 | 30 | -12569.487 ~ 0 |
+| F14-F23 | 固定维度 | 2-6 | 各异 |
+
+### 多目标测试问题 (13个)
+
+#### ZDT系列 (2目标)
+| 问题 | 维度 | Pareto前沿特性 |
+|------|------|----------------|
+| ZDT1 | 30 | 凸前沿 |
+| ZDT2 | 30 | 非凸前沿 |
+| ZDT3 | 30 | 不连续前沿 |
+| ZDT4 | 10 | 多模态 |
+| ZDT5 | 11 | 二进制编码 |
+| ZDT6 | 10 | 非均匀分布 |
+
+#### DTLZ系列 (可扩展目标)
+| 问题 | 维度 | Pareto前沿特性 |
+|------|------|----------------|
+| DTLZ1 | 可变 | 线性前沿 |
+| DTLZ2 | 可变 | 球面前沿 |
+| DTLZ3 | 可变 | 多模态球面 |
+| DTLZ4 | 可变 | 偏置球面 |
+| DTLZ5 | 可变 | 退化前沿 |
+| DTLZ6 | 可变 | 强偏置 |
+| DTLZ7 | 可变 | 不连续前沿 |
+
+### 多目标性能指标
+
+| 指标 | 全称 | 说明 |
+|------|------|------|
+| HV | Hypervolume | 超体积，越大越好 |
+| IGD | Inverted Generational Distance | 逆世代距离，越小越好 |
+| GD | Generational Distance | 世代距离，越小越好 |
+| Spacing | - | 解集均匀性，越小越好 |
+| Spread | Δ | 扩展度，越小越好 |
+| C-metric | Set Coverage | 集合覆盖度 |
 
 ---
 
@@ -188,22 +263,10 @@
 **Windows**:
 ```batch
 # 双击运行或命令行执行
-start.bat
+scripts\start.bat
 
 # 停止服务
-stop.bat
-```
-
-**Linux/macOS**:
-```bash
-# 添加执行权限
-chmod +x start.sh stop.sh
-
-# 启动服务
-./start.sh
-
-# 停止服务
-./stop.sh
+scripts\stop.bat
 ```
 
 启动完成后访问：
@@ -230,8 +293,6 @@ npm install
 ```bash
 cd api_server
 python main.py
-# 或使用uvicorn
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 **3. 启动前端**
@@ -242,6 +303,8 @@ npm run dev
 ```
 
 ### 方式三：MATLAB直接使用
+
+#### 单目标优化
 
 ```matlab
 % 1. 获取测试函数
@@ -257,71 +320,40 @@ problem.dim = dim;
 % 3. 配置算法
 config = struct('populationSize', 30, 'maxIterations', 500);
 
-% 4. 运行优化 - 灰狼优化器
+% 4. 运行优化
 gwo = GWO(config);
 result = gwo.run(problem);
-
-% 或使用正弦余弦算法
-sca = SCA(config);
-result = sca.run(problem);
-
-% 或使用樽海鞘群算法
-ssa = SSA(config);
-result = ssa.run(problem);
 
 % 5. 查看结果
 result.display();
 result.plotConvergence();
 ```
 
-### 新增算法使用示例
+#### 多目标优化
 
-**正弦余弦算法 (SCA)**:
 ```matlab
-% SCA 特有参数: a - 控制探索/开发平衡
-config = struct(...
-    'populationSize', 30, ...
-    'maxIterations', 500, ...
-    'a', 2 ...  % 默认值，范围[0, 10]
-);
-sca = SCA(config);
-result = sca.run(problem);
-```
+% 1. 获取多目标测试问题
+problem = MOBenchmarkProblems.get('ZDT1');
 
-**樽海鞘群算法 (SSA)**:
-```matlab
-% SSA 基本参数
+% 2. 配置算法
 config = struct(...
-    'populationSize', 30, ...
-    'maxIterations', 500 ...
+    'populationSize', 100, ...
+    'maxIterations', 100, ...
+    'archiveMaxSize', 100 ...
 );
-ssa = SSA(config);
-result = ssa.run(problem);
-```
 
-**多元宇宙优化器 (MVO)**:
-```matlab
-% MVO 特有参数: WEP_Min/WEP_Max - 虫洞存在概率范围
-config = struct(...
-    'populationSize', 30, ...
-    'maxIterations', 500, ...
-    'WEP_Min', 0.2, ...  % 最小虫洞存在概率
-    'WEP_Max', 1.0 ...   % 最大虫洞存在概率
-);
-mvo = MVO(config);
-result = mvo.run(problem);
-```
+% 3. 运行多目标优化
+mogwo = MOGWO(config);
+result = mogwo.run(problem);
 
-**飞蛾火焰优化 (MFO)**:
-```matlab
-% MFO 特有参数: b - 对数螺旋形状常数
-config = struct(...
-    'populationSize', 30, ...
-    'maxIterations', 500, ...
-    'b', 1 ...  % 默认值，范围[0, 10]
-);
-mfo = MFO(config);
-result = mfo.run(problem);
+% 4. 查看Pareto前沿
+result.plot();
+
+% 5. 计算性能指标
+truePF = problem.getTrueParetoFront(100);
+hv = MOMetrics.hypervolume(result.paretoFront, [1.1, 1.1]);
+igd = MOMetrics.IGD(result.paretoFront, truePF);
+fprintf('Hypervolume: %.4f, IGD: %.6f\n', hv, igd);
 ```
 
 ---
@@ -330,21 +362,23 @@ result = mfo.run(problem);
 
 ### 首页
 - 平台概览和统计数据
-- 快速入口（算法对比、单次优化）
+- 快速入口（单目标对比、多目标对比）
 - 算法分类展示
 
-### 算法对比
-- 多算法选择（按类别分组）
-- 基准函数选择（23个函数）
+### 单目标优化对比
+- 20种单目标算法选择
+- 23个基准函数选择
 - 参数自定义配置
-- 收敛曲线对比（对数坐标）
+- 收敛曲线对比
 - 统计摘要表格
-- 结果导出（JSON/CSV/PNG）
+- 结果导出
 
-### 单次优化
-- 单算法深度分析
-- 实时进度显示
-- 详细结果展示
+### 多目标优化对比
+- 5种多目标算法选择
+- 13个ZDT/DTLZ测试问题
+- Pareto前沿可视化
+- 性能指标对比 (Hypervolume, IGD, Spacing)
+- 结果导出
 
 ### 历史记录
 - 优化运行历史
@@ -379,34 +413,6 @@ POST /api/v1/optimize/batch       # 批量任务
 GET  /api/v1/tasks/{taskId}       # 获取任务状态
 DELETE /api/v1/tasks/{taskId}     # 取消任务
 WS   /ws/tasks/{taskId}           # WebSocket实时进度
-```
-
-### 导出
-```
-GET  /api/v1/results/{id}/export?format=json|csv|mat
-```
-
----
-
-## 基准测试函数
-
-平台包含23个国际通用基准测试函数：
-
-| 函数 | 类型 | 维度 | 最优值 |
-|------|------|------|--------|
-| F1-F7 | 单峰 | 30 | 0 |
-| F8-F13 | 多峰 | 30 | -12569.487 ~ 0 |
-| F14-F23 | 固定维度 | 2-6 | 各异 |
-
-**使用方法**:
-```matlab
-% 获取函数信息
-info = BenchmarkFunctions.getInfo('F1');
-disp(info);
-
-% 列出所有函数
-list = BenchmarkFunctions.list();
-disp(list);
 ```
 
 ---
@@ -454,12 +460,34 @@ disp(list);
 
 本项目的算法实现基于以下研究者的原创工作：
 
-- **Seyedali Mirjalili** - ALO, GWO, WOA, DA, BBA, MFO, MVO, SCA, SSA 等算法发明者
+- **Seyedali Mirjalili** - ALO, GWO, WOA, DA, BBA, MFO, MVO, SCA, SSA, PSOGSA, MOALO, MODA, MOGOA, MOGWO, MSSA 等算法发明者
+- **S. Saremi, A. Lewis** - GOA 蚱蜢优化算法发明者
 - **M. H. Nadimi-Shahraki et al.** - IGWO, EWOA算法发明者
+- **E. Zitzler et al.** - ZDT测试问题集
+- **K. Deb et al.** - DTLZ测试问题集
 
 感谢他们为元启发式优化领域做出的贡献。
 
 ---
 
+## 更新日志
+
+### v2.1.0 (2026年3月)
+- ✨ 新增多目标优化支持 (5种算法)
+- ✨ 新增ZDT/DTLZ测试问题集 (13个问题)
+- ✨ 新增多目标性能指标 (Hypervolume, IGD等)
+- ✨ Web前端新增多目标对比页面
+- 🗑️ 移除冗余的快速验证脚本
+- 🗑️ 清理过时的文档文件
+- 🔧 优化项目结构
+
+### v2.0.0 (2025年)
+- 🎉 初始版本发布
+- ✨ 实现20种单目标优化算法
+- ✨ Web可视化界面
+- ✨ RESTful API
+
+---
+
 **作者**: RUOFENG YU
-**最后更新**: 2025年2月
+**最后更新**: 2026年3月

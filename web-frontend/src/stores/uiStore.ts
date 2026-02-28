@@ -5,20 +5,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// 页面名称联合类型
-export type PageName = 'home' | 'comparison' | 'optimize' | 'history' | 'settings';
+export type PageName = 'home' | 'comparison' | 'moComparison' | 'optimize' | 'history' | 'settings';
 
 interface UIState {
-  // 侧边栏状态
   sidebarCollapsed: boolean;
-
-  // 主题
   theme: 'light' | 'dark';
-
-  // 当前页面
   currentPage: PageName;
 
-  // Actions
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleTheme: () => void;

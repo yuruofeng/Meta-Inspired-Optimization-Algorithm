@@ -39,6 +39,20 @@ function registerAllAlgorithms()
 
     % 混合算法
     WOASA.register();  % WOA-SA混合算法
+    PSOGSA.register(); % 混合PSO-GSA算法
+
+    % 群体智能算法（新增）
+    GOA.register();    % 蚱蜢优化算法
+
+    % 二进制算法（新增）
+    HLBDA.register();  % 超学习二进制蜻蜓算法
+
+    % 多目标优化算法（新增）
+    MOALO.register();  % 多目标蚁狮优化器
+    MODA.register();   % 多目标蜻蜓算法
+    MOGOA.register();  % 多目标蚱蜢优化算法
+    MOGWO.register();  % 多目标灰狼优化器
+    MSSA.register();   % 多目标樽海鞘群算法
 
     % 输出注册信息
     algorithms = AlgorithmRegistry.listAlgorithms();

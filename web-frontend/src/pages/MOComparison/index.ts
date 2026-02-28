@@ -1,0 +1,1 @@
+export { MOComparisonPage } from './MOComparisonPage';

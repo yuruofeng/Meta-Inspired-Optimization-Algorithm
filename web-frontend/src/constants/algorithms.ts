@@ -32,6 +32,7 @@ export const ALGORITHM_COLORS: Record<string, string> = {
   MVO: '#3B82F6',
   SCA: '#60A5FA',
   SSA: '#2563EB',
+  GOA: '#1E3A8A',
 
   // 进化算法（绿色系）
   GA: '#10B981',
@@ -41,6 +42,7 @@ export const ALGORITHM_COLORS: Record<string, string> = {
   IGWO: '#8B5CF6',
   EWOA: '#A78BFA',
   WOASA: '#7C3AED',
+  PSOGSA: '#9333EA',
 
   // PSO变体（橙色系）
   VPSO: '#F59E0B',
@@ -48,6 +50,9 @@ export const ALGORITHM_COLORS: Record<string, string> = {
 
   // 蝙蝠算法（红色系）
   BBA: '#EF4444',
+
+  // 二进制算法（青色系）
+  HLBDA: '#06B6D4',
 };
 
 // 默认算法配置
@@ -389,5 +394,64 @@ export const ALGORITHMS: Algorithm[] = [
       doi: '10.1016/j.advengsoft.2017.07.002',
     },
     complexity: { time: 'O(MaxIter × N × Dim)', space: 'O(N × Dim)' },
+  },
+  {
+    id: 'GOA',
+    name: 'GOA',
+    fullName: 'Grasshopper Optimization Algorithm',
+    version: '2.0.0',
+    description: '蚱蜢优化算法，模拟蚱蜢群体行为的元启发式算法',
+    category: 'swarm',
+    paramSchema: {
+      populationSize: { type: 'integer', default: 30, min: 10, max: 10000, description: '蚱蜢种群数量' },
+      maxIterations: { type: 'integer', default: 500, min: 1, max: 100000, description: '最大迭代次数' },
+      cMax: { type: 'float', default: 1, min: 0.1, max: 10, description: '最大衰减系数' },
+      cMin: { type: 'float', default: 0.00004, min: 0, max: 1, description: '最小衰减系数' },
+    },
+    reference: {
+      authors: 'S. Saremi, S. Mirjalili, A. Lewis',
+      year: 2017,
+      doi: '10.1016/j.advengsoft.2017.01.004',
+    },
+    complexity: { time: 'O(MaxIter × N² × Dim)', space: 'O(N × Dim)' },
+  },
+  {
+    id: 'PSOGSA',
+    name: 'PSOGSA',
+    fullName: 'Hybrid PSO-GSA Algorithm',
+    version: '2.0.0',
+    description: '混合粒子群-引力搜索算法，融合PSO的社会学习能力和GSA的物理引力机制',
+    category: 'hybrid',
+    paramSchema: {
+      populationSize: { type: 'integer', default: 30, min: 10, max: 10000, description: '粒子种群数量' },
+      maxIterations: { type: 'integer', default: 500, min: 1, max: 100000, description: '最大迭代次数' },
+      wMax: { type: 'float', default: 0.9, min: 0, max: 1, description: '最大惯性权重' },
+      wMin: { type: 'float', default: 0.5, min: 0, max: 1, description: '最小惯性权重' },
+      G0: { type: 'float', default: 1, min: 0.1, max: 100, description: '初始引力常数' },
+    },
+    reference: {
+      authors: 'S. Mirjalili, S.Z.M. Hashim',
+      year: 2010,
+    },
+    complexity: { time: 'O(MaxIter × N² × Dim)', space: 'O(N × Dim)' },
+  },
+  {
+    id: 'HLBDA',
+    name: 'HLBDA',
+    fullName: 'Hyper Learning Binary Dragonfly Algorithm',
+    version: '2.0.0',
+    description: '超学习二进制蜻蜓算法，专门用于特征选择和二进制优化问题',
+    category: 'swarm',
+    paramSchema: {
+      populationSize: { type: 'integer', default: 10, min: 5, max: 10000, description: '蜻蜓种群数量' },
+      maxIterations: { type: 'integer', default: 100, min: 1, max: 100000, description: '最大迭代次数' },
+      pp: { type: 'float', default: 0.4, min: 0, max: 1, description: '个人学习概率' },
+      pg: { type: 'float', default: 0.7, min: 0, max: 1, description: '全局学习概率' },
+    },
+    reference: {
+      authors: 'Feature Selection Research',
+      year: 2024,
+    },
+    complexity: { time: 'O(MaxIter × N² × Dim)', space: 'O(N × Dim)' },
   },
 ];
