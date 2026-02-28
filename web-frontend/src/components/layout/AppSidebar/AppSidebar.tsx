@@ -1,4 +1,5 @@
 import { Layout, Menu, Switch, Typography } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   HomeOutlined,
   SwapOutlined,
@@ -8,11 +9,13 @@ import {
   SunOutlined,
   MoonOutlined,
 } from '@ant-design/icons';
-import { useUIStore } from '../../../stores';
+import { useUIStore, type PageName } from '../../../stores';
 
 const { Sider } = Layout;
 
-const menuItems = [
+type MenuItem = Required<MenuProps>['items'][number];
+
+const menuItems: MenuItem[] = [
   {
     key: 'home',
     icon: <HomeOutlined />,
@@ -44,7 +47,7 @@ export function AppSidebar() {
   const { sidebarCollapsed, setSidebarCollapsed, theme, toggleTheme, currentPage, setCurrentPage } = useUIStore();
 
   const handleMenuClick = ({ key }: { key: string }) => {
-    setCurrentPage(key);
+    setCurrentPage(key as PageName);
   };
 
   return (
@@ -108,6 +111,8 @@ export function AppSidebar() {
         items={menuItems}
         onClick={handleMenuClick}
         style={{ borderRight: 0 }}
+        role="navigation"
+        aria-label="主导航菜单"
       />
 
       {/* 底部主题切换 */}

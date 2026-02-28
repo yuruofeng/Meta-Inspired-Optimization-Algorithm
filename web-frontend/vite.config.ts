@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     alias: {
@@ -25,6 +25,20 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // 仅在开发环境启用 sourcemap
+    sourcemap: mode === 'development',
+    rollupOptions: {
+      output: {
+        // 代码分割配置
+        manualChunks: {
+          // React 相关
+          'vendor-react': ['react', 'react-dom'],
+          // Ant Design 相关
+          'vendor-antd': ['antd', '@ant-design/icons'],
+          // Zustand 状态管理
+          'vendor-zustand': ['zustand'],
+        },
+      },
+    },
   },
-});
+}));

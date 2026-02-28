@@ -58,15 +58,15 @@ export async function getBenchmark(id: string): Promise<BenchmarkFunction> {
 /**
  * 执行单次优化
  */
-export async function runOptimization(request: OptimizationRequest): Promise<OptimizationResult> {
-  return apiClient.post<OptimizationResult>('/api/v1/optimize/single', request);
+export async function runOptimization(request: OptimizationRequest, signal?: AbortSignal): Promise<OptimizationResult> {
+  return apiClient.post<OptimizationResult>('/api/v1/optimize/single', request, signal ? { signal } : undefined);
 }
 
 /**
  * 执行算法对比
  */
-export async function runComparison(request: ComparisonRequest): Promise<ComparisonResult> {
-  return apiClient.post<ComparisonResult>('/api/v1/optimize/compare', request);
+export async function runComparison(request: ComparisonRequest, signal?: AbortSignal): Promise<ComparisonResult> {
+  return apiClient.post<ComparisonResult>('/api/v1/optimize/compare', request, signal ? { signal } : undefined);
 }
 
 /**
@@ -105,10 +105,8 @@ export function getExportUrl(resultId: string, format: ExportFormat): string {
  * 批量导出
  */
 export async function exportBatch(resultIds: string[], format: ExportFormat): Promise<Blob> {
-  const response = await fetch(`${apiClient.getBaseUrl()}/api/v1/results/export-batch`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ resultIds, format }),
+  const response = await apiClient.post<Blob>('/api/v1/results/export-batch', { resultIds, format }, {
+    responseType: 'blob'
   });
-  return response.blob();
+  return response;
 }

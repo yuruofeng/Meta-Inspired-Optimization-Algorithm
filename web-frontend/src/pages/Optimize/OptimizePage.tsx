@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Card,
   Row,
@@ -23,6 +23,8 @@ import { ALGORITHMS, BENCHMARK_FUNCTIONS, CATEGORY_NAMES } from '../../constants
 import { runOptimization } from '../../api/endpoints';
 import { EmptyDataIllustration, LoadingIllustration, ServerErrorIllustration } from '../../components/illustrations';
 import type { OptimizationResult, AlgorithmConfig, ProblemDefinition } from '../../types';
+import { toExponentialSafe, toFixedSafe } from '../../utils/arrayUtils';
+import { errorLogger } from '../../utils/errorLogger';
 
 const { Title, Text } = Typography;
 
@@ -35,12 +37,32 @@ export function OptimizePage() {
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // 请求取消控制器
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 组件卸载时取消所有未完成的请求
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
+
   const handleRunOptimization = async () => {
     const benchmark = BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
     if (!benchmark) {
       setError('未找到选中的基准函数');
       return;
     }
+
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // 创建新的取消控制器
+    abortControllerRef.current = new AbortController();
 
     setIsRunning(true);
     setError(null);
@@ -65,14 +87,21 @@ export function OptimizePage() {
         algorithm: selectedAlgorithm,
         problem,
         config
-      });
+      }, abortControllerRef.current.signal);
 
       setResult(response);
     } catch (err) {
+      // 如果是取消导致的错误，不显示消息
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('[OptimizePage] 请求已取消');
+        return;
+      }
       const errorMessage = err instanceof Error ? err.message : '优化执行失败，请检查后端服务是否正常运行';
+      errorLogger.error('单次优化失败', err);
       setError(errorMessage);
     } finally {
       setIsRunning(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -121,7 +150,7 @@ export function OptimizePage() {
                     <Card size="small">
                       <Statistic
                         title="最优适应度"
-                        value={result.bestFitness.toExponential(6)}
+                        value={toExponentialSafe(result.bestFitness, 6)}
                         prefix={<AimOutlined style={{ color: '#1677ff' }} />}
                       />
                     </Card>
@@ -130,7 +159,7 @@ export function OptimizePage() {
                     <Card size="small">
                       <Statistic
                         title="执行时间"
-                        value={result.elapsedTime.toFixed(3)}
+                        value={toFixedSafe(result.elapsedTime, 3)}
                         suffix="s"
                         prefix={<ClockCircleOutlined style={{ color: '#52c41a' }} />}
                       />
@@ -166,7 +195,7 @@ export function OptimizePage() {
                           </Text>
                           <br />
                           <Text strong style={{ fontSize: 12, fontFamily: 'monospace' }}>
-                            {value.toExponential(4)}
+                            {toExponentialSafe(value, 4)}
                           </Text>
                         </Card>
                       </Col>
@@ -183,7 +212,7 @@ export function OptimizePage() {
                     <Space wrap size={[4, 4]}>
                       {result.bestSolution.map((v, i) => (
                         <Tag key={i} style={{ fontFamily: 'monospace', margin: 0 }}>
-                          {v.toFixed(4)}
+                          {toFixedSafe(v, 4)}
                         </Tag>
                       ))}
                     </Space>

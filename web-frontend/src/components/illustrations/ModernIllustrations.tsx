@@ -8,8 +8,17 @@ import type { CSSProperties } from 'react';
 
 const { Title, Text } = Typography;
 
-// 重新导出 Illustration.tsx 中的类型以保持一致性
-export type { IllustrationSize, IllustrationTheme, IllustrationProps } from './Illustration';
+// 尺寸类型
+export type IllustrationSize = 'sm' | 'md' | 'lg' | 'xl';
+export type IllustrationTheme = 'light' | 'dark';
+export interface IllustrationProps {
+  size?: IllustrationSize;
+  title?: string;
+  description?: string;
+  primaryColor?: string;
+  className?: string;
+  style?: CSSProperties;
+}
 
 // 内部使用的尺寸类型（不包含 xs 和 full）
 type InternalSize = 'sm' | 'md' | 'lg' | 'xl';

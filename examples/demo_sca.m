@@ -1,0 +1,99 @@
+%% SCA算法演示脚本
+% 演示如何使用重构后的SCA（正弦余弦算法）优化基准测试函数
+%
+% 作者：RUOFENG YU
+% 版本: 2.0.0
+% 日期: 2026
+
+clear; clc; close all;
+
+fprintf('========================================\n');
+fprintf('Sine Cosine Algorithm (SCA) Demo\n');
+fprintf('========================================\n\n');
+
+%% 1. 设置随机种子（确保可复现性）
+rng(42, 'twister');
+fprintf('Random seed: 42\n\n');
+
+%% 2. 选择测试函数
+Function_name = 'F1';  % 可以选择 F1-F23
+
+fprintf('Benchmark Function: %s\n', Function_name);
+
+% 获取函数详情
+[lb, ub, dim, fobj] = BenchmarkFunctions.get(Function_name);
+funcInfo = BenchmarkFunctions.getInfo(Function_name);
+
+fprintf('  Type: %s\n', funcInfo.type);
+fprintf('  Dimension: %d\n', dim);
+fprintf('  Bounds: [%.2f, %.2f]\n', lb, ub);
+fprintf('  Optimal Value: %.6e\n\n', funcInfo.optimalValue);
+
+%% 3. 配置算法参数
+config = struct();
+config.populationSize = 30;    % 种群大小
+config.maxIterations = 500;    % 最大迭代次数
+config.a = 2;                  % 控制参数a
+config.verbose = true;         % 显示进度
+
+fprintf('Algorithm Configuration:\n');
+fprintf('  Population Size: %d\n', config.populationSize);
+fprintf('  Max Iterations: %d\n', config.maxIterations);
+fprintf('  Parameter a: %.2f\n\n', config.a);
+
+%% 4. 创建问题对象
+problem = struct();
+problem.evaluate = fobj;
+problem.lb = lb;
+problem.ub = ub;
+problem.dim = dim;
+
+%% 5. 运行SCA优化
+fprintf('Running SCA optimization...\n\n');
+
+tic;
+sca = SCA(config);
+result = sca.run(problem);
+elapsedTime = toc;
+
+%% 6. 显示结果
+fprintf('\n');
+result.display();
+
+fprintf('Optimization Time: %.3f seconds\n\n', elapsedTime);
+
+%% 7. 绘制收敛曲线
+figure('Position', [100, 100, 1200, 400]);
+
+% 子图1: 测试函数可视化（仅2D）
+subplot(1, 2, 1);
+if dim == 2
+    % 绘制函数表面
+    [X, Y] = meshgrid(linspace(lb, ub, 100), linspace(lb, ub, 100));
+    Z = zeros(size(X));
+    for i = 1:size(X, 1)
+        for j = 1:size(X, 2)
+            Z(i, j) = fobj([X(i, j), Y(i, j)]);
+        end
+    end
+    surfc(X, Y, Z, 'EdgeColor', 'none');
+    colorbar;
+    hold on;
+    plot3(result.bestSolution(1), result.bestSolution(2), ...
+        result.bestFitness, 'r*', 'MarkerSize', 20, 'LineWidth', 3);
+    xlabel('x_1');
+    ylabel('x_2');
+    zlabel('f(x)');
+    title(sprintf('%s Function (2D View)', Function_name));
+else
+    % 高维函数显示示意图
+    text(0.5, 0.5, sprintf(['Function dimension: %d\n\n(Best solution and ' ...
+        'fitness shown in command window)'], dim), ...
+        'HorizontalAlignment', 'center', 'FontSize', 12);
+    axis off;
+    title(sprintf('%s Function', Function_name));
+end
+
+% 子图2: 收敛曲线
+subplot(1, 2, 2);
+result.plotConvergence('Title', 'SCA Convergence Curve', 'Scale', 'log');

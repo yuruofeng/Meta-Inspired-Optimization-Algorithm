@@ -27,6 +27,8 @@ export function MainLayout({ children }: MainLayoutProps) {
             margin: 0,
             padding: 0,
           }}
+          role="main"
+          aria-label="主内容区域"
         >
           {children}
         </Content>

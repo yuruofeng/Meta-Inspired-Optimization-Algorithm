@@ -181,10 +181,48 @@ body {
   }
 }
 
+/* 中等屏幕 */
 @media (max-width: 768px) {
   .illustration--xl {
     width: 400px;
     height: 300px;
+  }
+}
+
+/* 小屏幕 */
+@media (max-width: 576px) {
+  .page-enter-active,
+  .page-exit-active {
+    transition-duration: 200ms;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  .illustration--lg {
+    width: 240px;
+    height: 180px;
+  }
+
+  .illustration--xl {
+    width: 280px;
+    height: 210px;
+  }
+
+  .empty-state {
+    padding: 16px;
+  }
+
+  .result-page {
+    padding: 24px;
+  }
+
+  .loading-state {
+    padding: 16px;
   }
 }
 
@@ -237,4 +275,113 @@ body {
 .dark .algorithm-tag--hybrid {
   background-color: rgba(139, 92, 246, 0.2);
   color: #A78BFA;
+}
+
+/* ========================================
+   算法选择按钮增强样式
+   ======================================== */
+
+/* 算法选择Tag增强样式 */
+.algorithm-tag-enhanced {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  font-weight: 500;
+}
+
+.algorithm-tag-enhanced:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.algorithm-tag-enhanced:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 通用按钮增强样式 */
+.algorithm-btn-enhanced {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.algorithm-btn-enhanced:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.algorithm-btn-enhanced:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 主要操作按钮增强样式 */
+.algorithm-btn-primary-enhanced {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
+}
+
+.algorithm-btn-primary-enhanced:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(22, 119, 255, 0.4);
+}
+
+.algorithm-btn-primary-enhanced:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
+}
+
+/* 焦点环效果（键盘导航支持） */
+.algorithm-btn-enhanced:focus-visible,
+.algorithm-tag-enhanced:focus-visible,
+.algorithm-btn-primary-enhanced:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.3);
+}
+
+/* 深色模式支持 */
+.dark .algorithm-tag-enhanced:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark .algorithm-btn-enhanced:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark .algorithm-btn-primary-enhanced {
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.25);
+}
+
+.dark .algorithm-btn-primary-enhanced:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(22, 119, 255, 0.35);
+}
+
+/* 响应式调整 - 移动端适配 */
+@media (max-width: 768px) {
+  .algorithm-tag-enhanced {
+    height: 40px !important;
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    min-width: 80px !important;
+  }
+
+  .algorithm-btn-enhanced {
+    height: 48px !important;
+    font-size: 14px !important;
+    padding: 10px 20px !important;
+  }
+
+  .algorithm-btn-primary-enhanced {
+    height: 56px !important;
+    font-size: 16px !important;
+    padding: 12px 24px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .algorithm-tag-enhanced {
+    height: 36px !important;
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    min-width: 70px !important;
+    margin: 4px !important;
+  }
 }

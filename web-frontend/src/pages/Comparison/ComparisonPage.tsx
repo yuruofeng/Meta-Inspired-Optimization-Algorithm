@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Card,
   Row,
@@ -11,6 +11,7 @@ import {
   Tag,
   Table,
   Badge,
+  message,
 } from 'antd';
 import {
   PlayCircleOutlined,
@@ -24,6 +25,8 @@ import { ALGORITHMS, BENCHMARK_FUNCTIONS, CATEGORY_NAMES, getAlgorithmColor } fr
 import { runComparison } from '../../api/endpoints';
 import { EmptyDataIllustration, LoadingIllustration, ServerErrorIllustration } from '../../components/illustrations';
 import type { ComparisonResult, AlgorithmConfig, ProblemDefinition } from '../../types';
+import { toExponentialSafe, toFixedSafe, getLastElement } from '../../utils/arrayUtils';
+import { errorLogger } from '../../utils/errorLogger';
 
 const { Title, Text } = Typography;
 
@@ -38,25 +41,48 @@ export function ComparisonPage() {
   const [result, setResult] = useState<ComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const algorithmsByCategory = ALGORITHMS.reduce((acc, alg) => {
-    if (!acc[alg.category]) {
-      acc[alg.category] = [];
-    }
-    acc[alg.category].push(alg);
-    return acc;
-  }, {} as Record<string, typeof ALGORITHMS>);
+  // 请求取消控制器
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 组件卸载时取消所有未完成的请求
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
+
+  // 算法分类数据（静态数据，使用useMemo避免重复计算）
+  const algorithmsByCategory = useMemo(() => {
+    return ALGORITHMS.reduce((acc, alg) => {
+      if (!acc[alg.category]) {
+        acc[alg.category] = [];
+      }
+      acc[alg.category].push(alg);
+      return acc;
+    }, {} as Record<string, typeof ALGORITHMS>);
+  }, []);
 
   const handleRunComparison = async () => {
     if (selectedIds.length < 2) {
-      setError('请至少选择2个算法进行对比');
+      message.warning('请至少选择2个算法进行对比');
       return;
     }
 
     const benchmark = BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
     if (!benchmark) {
-      setError('未找到选中的基准函数');
+      message.error('未找到选中的基准函数');
       return;
     }
+
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // 创建新的取消控制器
+    abortControllerRef.current = new AbortController();
 
     setIsRunning(true);
     setError(null);
@@ -82,18 +108,28 @@ export function ComparisonPage() {
         problem,
         config,
         runsPerAlgorithm: runs
-      });
+      }, abortControllerRef.current.signal);
 
       setResult(response);
+      message.success('算法对比完成！');
     } catch (err) {
+      // 如果是取消导致的错误，不显示消息
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('[ComparisonPage] 请求已取消');
+        return;
+      }
       const errorMessage = err instanceof Error ? err.message : '优化执行失败，请检查后端服务是否正常运行';
+      errorLogger.error('算法对比失败', err);
       setError(errorMessage);
+      message.error(errorMessage);
     } finally {
       setIsRunning(false);
+      abortControllerRef.current = null;
     }
   };
 
-  const columns = [
+  // 表格列定义（不会变化）
+  const columns = useMemo(() => [
     {
       title: '算法',
       dataIndex: 'algorithmId',
@@ -118,14 +154,14 @@ export function ComparisonPage() {
       dataIndex: 'bestFitness',
       key: 'bestFitness',
       align: 'right' as const,
-      render: (value: number) => value?.toExponential(6) || '-',
+      render: (value: number) => toExponentialSafe(value, 6),
     },
     {
       title: '执行时间(s)',
       dataIndex: 'elapsedTime',
       key: 'elapsedTime',
       align: 'right' as const,
-      render: (value: number) => value?.toFixed(3) || '-',
+      render: (value: number) => toFixedSafe(value, 3),
     },
     {
       title: '排名',
@@ -143,21 +179,28 @@ export function ComparisonPage() {
         );
       },
     },
-  ];
+  ], []);
 
-  const tableData = result?.algorithms.map((algId) => {
-    const algResult = result.results[algId];
-    const ranking = result.statistics.rankings[algId];
-    return {
-      key: algId,
-      algorithmId: algId,
-      bestFitness: algResult?.bestFitness,
-      elapsedTime: algResult?.elapsedTime,
-      ranking,
-    };
-  }) || [];
+  // 表格数据转换（仅在result变化时重新计算）
+  const tableData = useMemo(() => {
+    if (!result) return [];
+    return result.algorithms.map((algId) => {
+      const algResult = result.results[algId];
+      const ranking = result.statistics.rankings[algId];
+      return {
+        key: algId,
+        algorithmId: algId,
+        bestFitness: algResult?.bestFitness,
+        elapsedTime: algResult?.elapsedTime,
+        ranking,
+      };
+    }) || [];
+  }, [result]);
 
-  const selectedBenchmarkFunc = BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
+  // 选中的基准函数（使用useMemo优化）
+  const selectedBenchmarkFunc = useMemo(() => {
+    return BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
+  }, [selectedBenchmark]);
 
   return (
     <div style={{ padding: 24 }}>
@@ -179,8 +222,32 @@ export function ComparisonPage() {
               }
               extra={
                 <Space>
-                  <Button size="small" icon={<CheckOutlined />} onClick={selectAll}>全选</Button>
-                  <Button size="small" icon={<CloseOutlined />} onClick={clearSelection}>清空</Button>
+                  <Button
+                    icon={<CheckOutlined />}
+                    onClick={selectAll}
+                    className="algorithm-btn-enhanced"
+                    style={{
+                      height: 56,
+                      fontSize: 16,
+                      padding: '12px 24px',
+                      borderRadius: 8,
+                    }}
+                  >
+                    全选
+                  </Button>
+                  <Button
+                    icon={<CloseOutlined />}
+                    onClick={clearSelection}
+                    className="algorithm-btn-enhanced"
+                    style={{
+                      height: 56,
+                      fontSize: 16,
+                      padding: '12px 24px',
+                      borderRadius: 8,
+                    }}
+                  >
+                    清空
+                  </Button>
                 </Space>
               }
             >
@@ -195,7 +262,18 @@ export function ComparisonPage() {
                         <Tag
                           key={alg.id}
                           color={selectedIds.includes(alg.id) ? getAlgorithmColor(alg.id) : 'default'}
-                          style={{ cursor: 'pointer', margin: '4px' }}
+                          className="algorithm-tag-enhanced"
+                          style={{
+                            height: 48,
+                            fontSize: 16,
+                            padding: '10px 20px',
+                            margin: '8px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minWidth: 100,
+                          }}
                           onClick={() => toggleAlgorithm(alg.id)}
                         >
                           {alg.name}
@@ -238,8 +316,15 @@ export function ComparisonPage() {
                   <Table
                     columns={columns}
                     dataSource={tableData}
-                    pagination={false}
-                    size="small"
+                    pagination={{
+                      pageSize: 10,
+                      showSizeChanger: true,
+                      showQuickJumper: true,
+                      showTotal: (total) => `共 ${total} 条`,
+                      pageSizeOptions: ['5', '10', '20', '50'],
+                    }}
+                    scroll={{ y: 400 }}
+                    size="middle"
                   />
 
                   <Card size="small" title={<Space><LineChartOutlined /><span>收敛曲线数据</span></Space>}>
@@ -267,7 +352,7 @@ export function ComparisonPage() {
                                   迭代: {convergence.length}
                                 </Text>
                                 <Text type="secondary" style={{ fontSize: 11 }}>
-                                  最终: {convergence[convergence.length - 1]?.toExponential(4) || '-'}
+                                  最终: {toExponentialSafe(getLastElement(convergence), 4)}
                                 </Text>
                               </Space>
                             </Card>
@@ -355,20 +440,34 @@ export function ComparisonPage() {
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
               <Button
                 type="primary"
-                size="large"
-                block
                 icon={<PlayCircleOutlined />}
                 onClick={handleRunComparison}
                 disabled={isRunning || selectedIds.length < 2}
                 loading={isRunning}
+                block
+                className="algorithm-btn-primary-enhanced"
+                style={{
+                  height: 72,
+                  fontSize: 18,
+                  padding: '16px 28px',
+                  borderRadius: 10,
+                }}
+                aria-busy={isRunning}
+                aria-label={isRunning ? '运行对比中' : '开始运行对比'}
               >
                 {isRunning ? '运行中...' : '运行对比'}
               </Button>
               <Button
-                size="large"
                 block
                 icon={<DownloadOutlined />}
                 disabled
+                className="algorithm-btn-enhanced"
+                style={{
+                  height: 72,
+                  fontSize: 18,
+                  padding: '16px 28px',
+                  borderRadius: 10,
+                }}
               >
                 导出结果
               </Button>

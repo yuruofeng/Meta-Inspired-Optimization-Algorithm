@@ -5,6 +5,8 @@
 
 import axios, { type AxiosInstance, type AxiosRequestConfig, AxiosError } from 'axios';
 import type { ApiError } from '../types';
+import { errorLogger } from '../utils/errorLogger';
+import { safeStorage } from '../utils/storage';
 
 // API 基础配置
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -26,7 +28,7 @@ class ApiClient {
     this.client.interceptors.request.use(
       (config) => {
         // 可添加认证token
-        const token = localStorage.getItem('authToken');
+        const token = safeStorage.getItem('authToken');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -45,16 +47,16 @@ class ApiClient {
 
           switch (status) {
             case 401:
-              console.error('未授权访问');
+              errorLogger.apiError('未授权访问', status, data);
               break;
             case 404:
-              console.error('资源不存在');
+              errorLogger.apiError('资源不存在', status, data);
               break;
             case 500:
-              console.error('服务器错误:', data?.message);
+              errorLogger.apiError('服务器错误', status, data?.message);
               break;
             default:
-              console.error('请求错误:', data?.message);
+              errorLogger.apiError('请求错误', status, data?.message);
           }
 
           // 返回格式化的错误
@@ -66,6 +68,7 @@ class ApiClient {
         }
 
         // 网络错误
+        errorLogger.apiError('网络连接失败', undefined, error.message);
         return Promise.reject({
           code: 'NETWORK_ERROR',
           message: '网络连接失败，请检查网络设置',
@@ -104,6 +107,14 @@ class ApiClient {
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<T>(url, config);
     return response.data;
+  }
+
+  /**
+   * 创建带取消令牌的请求配置
+   */
+  createCancellableConfig(signal?: AbortSignal): AxiosRequestConfig | undefined {
+    if (!signal) return undefined;
+    return { signal };
   }
 
   /**

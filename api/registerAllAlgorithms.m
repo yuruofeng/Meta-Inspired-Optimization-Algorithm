@@ -18,6 +18,8 @@ function registerAllAlgorithms()
     DA.register();     % 蜻蜓算法
     MFO.register();    % 飞蛾火焰优化算法
     MVO.register();    % 多元宇宙优化器
+    SCA.register();    % 正弦余弦算法
+    SSA.register();    % 樽海鞘群算法
 
     % 改进算法
     IGWO.register();   % 改进灰狼优化器

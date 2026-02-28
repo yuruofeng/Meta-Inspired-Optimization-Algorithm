@@ -89,3 +89,40 @@ export const useAlgorithmStore = create<AlgorithmState>((set, get) => ({
     return { ...DEFAULT_CONFIG, ...schemaDefaults, ...savedConfig };
   },
 }));
+
+// 导出的选择器hooks（用于减少不必要的重渲染）
+export const useSelectedAlgorithmIds = () =>
+  useAlgorithmStore((state) => state.selectedIds);
+
+export const useAlgorithmActions = () =>
+  useAlgorithmStore((state) => ({
+    toggleAlgorithm: state.toggleAlgorithm,
+    selectAll: state.selectAll,
+    clearSelection: state.clearSelection,
+  }));
+
+// 更多选择器 hooks
+export const useSelectedAlgorithms = () =>
+  useAlgorithmStore((state) =>
+    state.algorithms.filter((a) => state.selectedIds.includes(a.id))
+  );
+
+export const useAlgorithmConfig = (id: string) =>
+  useAlgorithmStore((state) => state.getConfig(id));
+
+export const useAlgorithmsByCategory = () =>
+  useAlgorithmStore((state) =>
+    state.algorithms.reduce((acc, alg) => {
+      if (!acc[alg.category]) {
+        acc[alg.category] = [];
+      }
+      acc[alg.category].push(alg);
+      return acc;
+    }, {} as Record<string, typeof state.algorithms>)
+  );
+
+export const useSelectionCount = () =>
+  useAlgorithmStore((state) => ({
+    selected: state.selectedIds.length,
+    total: state.algorithms.length,
+  }));

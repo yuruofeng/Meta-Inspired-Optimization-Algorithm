@@ -21,6 +21,7 @@ export class OptimizationWebSocket {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 2000;
   private isConnecting = false;
+  private reconnectTimerId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     taskId: string,
@@ -106,12 +107,19 @@ export class OptimizationWebSocket {
    * 尝试重连
    */
   private attemptReconnect(): void {
+    // 清除现有的重连定时器
+    if (this.reconnectTimerId !== null) {
+      clearTimeout(this.reconnectTimerId);
+      this.reconnectTimerId = null;
+    }
+
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * this.reconnectAttempts;
       console.log(`[WebSocket] 尝试重连 (${this.reconnectAttempts}/${this.maxReconnectAttempts})，${delay}ms后...`);
 
-      setTimeout(() => {
+      this.reconnectTimerId = setTimeout(() => {
+        this.reconnectTimerId = null;
         this.connect();
       }, delay);
     } else {
@@ -123,6 +131,12 @@ export class OptimizationWebSocket {
    * 断开连接
    */
   disconnect(): void {
+    // 清除重连定时器
+    if (this.reconnectTimerId !== null) {
+      clearTimeout(this.reconnectTimerId);
+      this.reconnectTimerId = null;
+    }
+
     if (this.ws) {
       this.ws.close();
       this.ws = null;
