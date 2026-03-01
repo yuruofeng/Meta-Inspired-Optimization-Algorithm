@@ -23,7 +23,7 @@ classdef (Abstract) BaseAlgorithm < handle
     properties (Access = protected)
         config struct          % 算法配置参数
         currentIteration int64 % 当前迭代次数
-        startTime double       % 开始时间
+        startTime              % 开始时间 (tic返回值)
         problem                % 问题对象
     end
 
@@ -32,10 +32,6 @@ classdef (Abstract) BaseAlgorithm < handle
         bestSolution double      % 当前最优解
         bestFitness double       % 当前最优适应度
         totalEvaluations int64   % 总评估次数
-    end
-
-    properties (Constant)
-        PARAM_SCHEMA struct = struct()  % 参数元数据，子类应覆盖
     end
 
     methods
@@ -75,23 +71,97 @@ classdef (Abstract) BaseAlgorithm < handle
             %   result = algorithm.run(problem);
             %   fprintf('Best fitness: %.6f\\n', result.bestFitness);
 
-            obj.startTime = tic;
+            obj.validateProblem(problem);
             obj.problem = problem;
 
-            % 初始化
-            obj.initialize(problem);
+            try
+                obj.startTime = tic;
+                obj.initialize(problem);
 
-            % 主循环
-            while ~obj.shouldStop()
-                obj.iterate();
-                obj.currentIteration = obj.currentIteration + 1;
+                while ~obj.shouldStop()
+                    obj.iterate();
+                    obj.currentIteration = obj.currentIteration + 1;
+                    obj.convergenceCurve(obj.currentIteration) = obj.bestFitness;
+                end
 
-                % 记录收敛曲线
-                obj.convergenceCurve(obj.currentIteration) = obj.bestFitness;
+                result = obj.collectResult();
+            catch ME
+                result = obj.handleOptimizationError(ME);
+            end
+        end
+
+        function validateProblem(obj, problem)
+            % validateProblem 验证问题对象的合法性
+            %
+            % 输入参数:
+            %   problem - 问题对象
+            %
+            % 异常:
+            %   BaseAlgorithm:InvalidProblem - 问题对象不合法
+
+            if nargin < 2 || isempty(problem)
+                error('BaseAlgorithm:InvalidProblem', ...
+                    'Problem object cannot be empty');
             end
 
-            % 收集结果
-            result = obj.collectResult();
+            if ~isstruct(problem) && ~isa(problem, 'handle')
+                error('BaseAlgorithm:InvalidProblem', ...
+                    'Problem must be a struct or handle object');
+            end
+
+            if ~isfield(problem, 'evaluate') && ~isa(problem, 'handle')
+                error('BaseAlgorithm:InvalidProblem', ...
+                    'Problem must have an ''evaluate'' method');
+            end
+
+            if isstruct(problem)
+                if isfield(problem, 'lb') && isfield(problem, 'ub')
+                    if any(problem.lb > problem.ub)
+                        error('BaseAlgorithm:InvalidProblem', ...
+                            'Lower bounds must be <= upper bounds');
+                    end
+                    if isfield(problem, 'dim')
+                        if problem.dim ~= length(problem.lb)
+                            error('BaseAlgorithm:InvalidProblem', ...
+                                'Dimension must match bounds length');
+                        end
+                    end
+                end
+            end
+        end
+
+        function result = handleOptimizationError(obj, ME)
+            % handleOptimizationError 处理优化过程中的错误
+            %
+            % 输入参数:
+            %   ME - MException 错误对象
+            %
+            % 输出参数:
+            %   result - 包含错误信息的OptimizationResult
+
+            warning('Optimization failed: %s', ME.message);
+            
+            elapsedTime = 0;
+            try
+                elapsedTime = toc(obj.startTime);
+            catch
+                elapsedTime = 0;
+            end
+
+            result = OptimizationResult(...
+                'bestSolution', [], ...
+                'bestFitness', Inf, ...
+                'convergenceCurve', [], ...
+                'totalEvaluations', obj.totalEvaluations, ...
+                'elapsedTime', elapsedTime, ...
+                'metadata', struct(...
+                    'algorithm', class(obj), ...
+                    'iterations', obj.currentIteration, ...
+                    'config', obj.config, ...
+                    'error', ME.message, ...
+                    'errorIdentifier', ME.identifier ...
+                ) ...
+            );
         end
     end
 
@@ -154,11 +224,28 @@ classdef (Abstract) BaseAlgorithm < handle
             %
             % 输出参数:
             %   fitness - 适应度值
+            %
+            % 异常:
+            %   BaseAlgorithm:InvalidSolution - 解向量不合法
+
+            if nargin < 2 || isempty(solution)
+                error('BaseAlgorithm:InvalidSolution', ...
+                    'Solution cannot be empty');
+            end
+
+            if ~isnumeric(solution)
+                error('BaseAlgorithm:InvalidSolution', ...
+                    'Solution must be numeric');
+            end
+
+            if any(isnan(solution)) || any(isinf(solution))
+                error('BaseAlgorithm:InvalidSolution', ...
+                    'Solution contains NaN or Inf values');
+            end
 
             fitness = obj.problem.evaluate(solution);
             obj.totalEvaluations = obj.totalEvaluations + 1;
 
-            % 更新最优解
             if fitness < obj.bestFitness
                 obj.bestFitness = fitness;
                 obj.bestSolution = solution;
@@ -173,6 +260,29 @@ classdef (Abstract) BaseAlgorithm < handle
             %
             % 输出参数:
             %   fitness - 适应度向量 (N x 1)
+            %
+            % 异常:
+            %   BaseAlgorithm:InvalidPopulation - 种群矩阵不合法
+
+            if nargin < 2 || isempty(population)
+                error('BaseAlgorithm:InvalidPopulation', ...
+                    'Population cannot be empty');
+            end
+
+            if ~isnumeric(population)
+                error('BaseAlgorithm:InvalidPopulation', ...
+                    'Population must be numeric');
+            end
+
+            if ndims(population) > 2
+                error('BaseAlgorithm:InvalidPopulation', ...
+                    'Population must be a 2D matrix');
+            end
+
+            if any(isnan(population(:))) || any(isinf(population(:)))
+                error('BaseAlgorithm:InvalidPopulation', ...
+                    'Population contains NaN or Inf values');
+            end
 
             popSize = size(population, 1);
             fitness = zeros(popSize, 1);
@@ -192,6 +302,91 @@ classdef (Abstract) BaseAlgorithm < handle
                 fprintf('[%s] Iteration %d/%d: %s\n', ...
                     class(obj), obj.currentIteration, ...
                     obj.config.maxIterations, message);
+            end
+        end
+
+        function population = initializePopulation(obj, problem, popSize)
+            % initializePopulation 初始化种群并验证
+            %
+            % 输入参数:
+            %   problem - 问题对象
+            %   popSize - 种群大小
+            %
+            % 输出参数:
+            %   population - 初始化的种群矩阵 (popSize x dim)
+            %
+            % 异常:
+            %   BaseAlgorithm:InvalidProblem - 问题边界不合法
+
+            if ~isfield(problem, 'lb') || ~isfield(problem, 'ub')
+                error('BaseAlgorithm:InvalidProblem', ...
+                    'Problem must have lb and ub fields');
+            end
+
+            dim = length(problem.lb);
+            lb = problem.lb(:)';
+            ub = problem.ub(:)';
+
+            population = zeros(popSize, dim);
+            for i = 1:dim
+                population(:, i) = lb(i) + (ub(i) - lb(i)) .* rand(popSize, 1);
+            end
+        end
+
+        function solution = clampToBounds(obj, solution, lb, ub)
+            % clampToBounds 将解限制在边界范围内
+            %
+            % 输入参数:
+            %   solution - 解向量
+            %   lb - 下界向量
+            %   ub - 上界向量
+            %
+            % 输出参数:
+            %   solution - 边界处理后的解向量
+
+            solution = max(solution, lb);
+            solution = min(solution, ub);
+        end
+
+        function population = clampPopulationToBounds(obj, population, lb, ub)
+            % clampPopulationToBounds 将种群限制在边界范围内
+            %
+            % 输入参数:
+            %   population - 种群矩阵 (N x dim)
+            %   lb - 下界向量
+            %   ub - 上界向量
+            %
+            % 输出参数:
+            %   population - 边界处理后的种群矩阵
+
+            lb = lb(:)';
+            ub = ub(:)';
+            for d = 1:size(population, 2)
+                population(:, d) = max(population(:, d), lb(d));
+                population(:, d) = min(population(:, d), ub(d));
+            end
+        end
+
+        function solution = reflectBounds(obj, solution, lb, ub)
+            % reflectBounds 反射边界处理（越界后反射回来）
+            %
+            % 输入参数:
+            %   solution - 解向量
+            %   lb - 下界向量
+            %   ub - 上界向量
+            %
+            % 输出参数:
+            %   solution - 反射处理后的解向量
+
+            for i = 1:length(solution)
+                while solution(i) < lb(i) || solution(i) > ub(i)
+                    if solution(i) < lb(i)
+                        solution(i) = 2 * lb(i) - solution(i);
+                    end
+                    if solution(i) > ub(i)
+                        solution(i) = 2 * ub(i) - solution(i);
+                    end
+                end
             end
         end
     end
@@ -292,6 +487,31 @@ classdef (Abstract) BaseAlgorithm < handle
 
                         case 'string'
                             validateattributes(value, {'char', 'string'}, {'scalar'});
+
+                        case 'float'
+                            validateattributes(value, {'numeric'}, {'scalar'});
+                            if isfield(fieldSchema, 'min')
+                                validateattributes(value, {'numeric'}, ...
+                                    {'scalar', '>=', fieldSchema.min});
+                            end
+                            if isfield(fieldSchema, 'max')
+                                validateattributes(value, {'numeric'}, ...
+                                    {'scalar', '<=', fieldSchema.max});
+                            end
+
+                        case 'enum'
+                            if isfield(fieldSchema, 'options')
+                                validOptions = fieldSchema.options;
+                                if iscell(validOptions) && numel(validOptions) == 1 && iscell(validOptions{1})
+                                    validOptions = validOptions{1};
+                                end
+                                if isstring(validOptions)
+                                    validOptions = cellstr(validOptions);
+                                end
+                                value = validatestring(value, validOptions);
+                            else
+                                validateattributes(value, {'char', 'string'}, {'scalar'});
+                            end
 
                         otherwise
                             error('BaseAlgorithm:UnknownType', ...

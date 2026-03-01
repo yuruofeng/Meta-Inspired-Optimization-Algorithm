@@ -275,51 +275,7 @@ classdef HLBDA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 10;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('HLBDA:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 100;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('HLBDA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            if isfield(config, 'pp')
-                validatedConfig.pp = config.pp;
-            else
-                validatedConfig.pp = 0.4;
-            end
-
-            if isfield(config, 'pg')
-                validatedConfig.pg = config.pg;
-            else
-                validatedConfig.pg = 0.7;
-            end
-
-            if isfield(config, 'Dmax')
-                validatedConfig.Dmax = config.Dmax;
-            else
-                validatedConfig.Dmax = 6;
-            end
-
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

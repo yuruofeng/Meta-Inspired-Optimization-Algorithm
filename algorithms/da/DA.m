@@ -289,12 +289,10 @@ classdef DA < BaseAlgorithm
                     obj.positions(i, :) = obj.positions(i, :) + obj.stepVectors(i, :);
                 end
 
-                % 步长限制
                 obj.stepVectors(i, :) = max(obj.stepVectors(i, :), -obj.maxStep);
                 obj.stepVectors(i, :) = min(obj.stepVectors(i, :), obj.maxStep);
 
-                % 边界检查
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
+                obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
             end
 
             % 更新全局最优
@@ -317,73 +315,7 @@ classdef DA < BaseAlgorithm
         end
 
         function validatedConfig = validateConfig(obj, config)
-            validatedConfig = struct();
-
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('DA:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            % 权重参数
-            if isfield(config, 'separationWeight')
-                validatedConfig.separationWeight = config.separationWeight;
-            else
-                validatedConfig.separationWeight = 0.1;
-            end
-
-            if isfield(config, 'alignmentWeight')
-                validatedConfig.alignmentWeight = config.alignmentWeight;
-            else
-                validatedConfig.alignmentWeight = 0.1;
-            end
-
-            if isfield(config, 'cohesionWeight')
-                validatedConfig.cohesionWeight = config.cohesionWeight;
-            else
-                validatedConfig.cohesionWeight = 0.1;
-            end
-
-            if isfield(config, 'foodWeight')
-                validatedConfig.foodWeight = config.foodWeight;
-            else
-                validatedConfig.foodWeight = 0.1;
-            end
-
-            if isfield(config, 'enemyWeight')
-                validatedConfig.enemyWeight = config.enemyWeight;
-            else
-                validatedConfig.enemyWeight = 0.1;
-            end
-
-            % 惯性权重
-            if isfield(config, 'wMax')
-                validatedConfig.wMax = config.wMax;
-            else
-                validatedConfig.wMax = 0.9;
-            end
-
-            if isfield(config, 'wMin')
-                validatedConfig.wMin = config.wMin;
-            else
-                validatedConfig.wMin = 0.4;
-            end
-
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

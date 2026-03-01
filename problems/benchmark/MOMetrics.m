@@ -11,13 +11,8 @@ classdef MOMetrics < handle
     %   - Set Coverage (C-metric): 集合覆盖度
     %
     % 使用示例:
-    %   % 计算Hypervolume
     %   hv = MOMetrics.hypervolume(paretoFront, referencePoint);
-    %
-    %   % 计算IGD
     %   igd = MOMetrics.IGD(paretoFront, trueParetoFront);
-    %
-    %   % 计算所有指标
     %   metrics = MOMetrics.computeAll(approxPF, truePF, refPoint);
     %
     % 参考文献:
@@ -26,7 +21,7 @@ classdef MOMetrics < handle
     %   [2] While, L., et al. (2006). A faster algorithm for calculating 
     %       hypervolume. IEEE TEVC.
     %
-    % 版本: 1.0.0
+    % 版本: 1.1.0
     % 日期: 2026
     % 作者: RUOFENG YU
 
@@ -61,71 +56,176 @@ classdef MOMetrics < handle
                 return;
             end
 
-            pf = sortrows(pf);
+            validMask = all(pf < refPoint, 2);
+            pf = pf(validMask, :);
+            
+            if isempty(pf)
+                hv = 0;
+                return;
+            end
+            
+            pf = MOMetrics.filterDominated(pf);
             
             if m == 2
                 hv = MOMetrics.hypervolume2D(pf, refPoint);
+            elseif m == 3
+                hv = MOMetrics.hypervolume3D(pf, refPoint);
             else
-                hv = MOMetrics.hypervolumeND(pf, refPoint);
+                hv = MOMetrics.hypervolumeWFG(pf, refPoint);
             end
         end
 
         function hv = hypervolume2D(pf, refPoint)
-            % 2D情况的快速计算
+            % hypervolume2D 2D情况的O(n log n)快速计算
+            %
+            % 使用扫描线算法，复杂度O(n log n)
+
             pf = sortrows(pf, 1);
             n = size(pf, 1);
             
             hv = 0;
-            for i = 1:n
-                width = refPoint(1) - pf(i, 1);
-                if width < 0
-                    width = 0;
+            prevY = refPoint(2);
+            
+            for i = n:-1:1
+                if pf(i, 2) < prevY
+                    width = refPoint(1) - pf(i, 1);
+                    height = prevY - pf(i, 2);
+                    if width > 0 && height > 0
+                        hv = hv + width * height;
+                    end
+                    prevY = pf(i, 2);
                 end
-                
-                if i == n
-                    height = refPoint(2) - pf(i, 2);
-                else
-                    height = pf(i+1, 2) - pf(i, 2);
-                end
-                if height < 0
-                    height = 0;
-                end
-                
-                hv = hv + width * height;
             end
         end
 
-        function hv = hypervolumeND(pf, refPoint)
-            % 高维情况的HSO算法实现
+        function hv = hypervolume3D(pf, refPoint)
+            % hypervolume3D 3D情况的O(n^2)计算
+            %
+            % 使用改进的切片算法
+
+            pf = sortrows(pf, 3);
+            n = size(pf, 1);
+            
+            hv = 0;
+            prevZ = refPoint(3);
+            
+            for i = n:-1:1
+                if pf(i, 3) < prevZ
+                    sliceHV = MOMetrics.hypervolume2D(pf(i:end, 1:2), refPoint(1:2));
+                    height = prevZ - pf(i, 3);
+                    hv = hv + sliceHV * height;
+                    prevZ = pf(i, 3);
+                end
+            end
+        end
+
+        function hv = hypervolumeWFG(pf, refPoint)
+            % hypervolumeWFG WFG算法实现 (Walking Fish Group)
+            %
+            % 对高维问题更高效的实现
+            % 复杂度: O(n^{d/2})
+
             [n, m] = size(pf);
             
-            if m == 1
-                minVal = min(pf(:, 1));
-                hv = max(0, refPoint(1) - minVal);
+            if n > 100
+                hv = MOMetrics.hypervolumeMonteCarlo(pf, refPoint, 10000);
                 return;
             end
-
+            
             pf = sortrows(pf, m);
             hv = 0;
             
             for i = 1:n
                 if pf(i, m) < refPoint(m)
-                    limits = pf(1:i-1, 1:m-1);
-                    if i > 1 && ~isempty(limits)
-                        if any(all(limits <= pf(i, 1:m-1), 2))
-                            continue;
-                        end
-                    end
-                    
-                    sliceVol = MOMetrics.hypervolumeND(pf(i, 1:m-1), refPoint(1:m-1));
+                    exclusiveVol = MOMetrics.computeExclusiveHV(pf, i, refPoint);
                     if i == n
                         height = refPoint(m) - pf(i, m);
                     else
                         height = pf(i+1, m) - pf(i, m);
                     end
-                    hv = hv + sliceVol * max(0, height);
+                    hv = hv + exclusiveVol * max(0, height);
                 end
             end
+        end
+
+        function vol = computeExclusiveHV(pf, idx, refPoint)
+            % computeExclusiveHV 计算某个解的排他性贡献
+            [n, m] = size(pf);
+            point = pf(idx, :);
+            
+            lowerBounds = -inf(1, m);
+            for i = 1:n
+                if i ~= idx
+                    dominated = true;
+                    for d = 1:m
+                        if pf(i, d) < point(d)
+                            dominated = false;
+                            break;
+                        end
+                    end
+                    if dominated
+                        for d = 1:m
+                            lowerBounds(d) = max(lowerBounds(d), pf(i, d));
+                        end
+                    end
+                end
+            end
+            
+            vol = prod(max(0, refPoint - max(point, lowerBounds)));
+        end
+
+        function hv = hypervolumeMonteCarlo(pf, refPoint, numSamples)
+            % hypervolumeMonteCarlo 蒙特卡洛近似计算
+            %
+            % 用于高维、大规模问题的快速近似
+
+            arguments
+                pf (:,:) double
+                refPoint (1,:) double
+                numSamples (1,1) double = 10000
+            end
+
+            [n, m] = size(pf);
+            
+            minVals = min(pf, [], 1);
+            ranges = refPoint - minVals;
+            totalVol = prod(ranges);
+            
+            samples = rand(numSamples, m);
+            samples = samples .* ranges + minVals;
+            
+            dominated = false(numSamples, 1);
+            for i = 1:n
+                dominated = dominated | all(samples <= pf(i, :), 2);
+            end
+            
+            hv = totalVol * sum(dominated) / numSamples;
+        end
+
+        function pf = filterDominated(pf)
+            % filterDominated 过滤掉被支配的解
+            [n, m] = size(pf);
+            if n <= 1
+                return;
+            end
+            
+            isDominated = false(n, 1);
+            
+            for i = 1:n
+                if ~isDominated(i)
+                    for j = i+1:n
+                        if ~isDominated(j)
+                            if all(pf(i, :) <= pf(j, :)) && any(pf(i, :) < pf(j, :))
+                                isDominated(j) = true;
+                            elseif all(pf(j, :) <= pf(i, :)) && any(pf(j, :) < pf(i, :))
+                                isDominated(i) = true;
+                            end
+                        end
+                    end
+                end
+            end
+            
+            pf = pf(~isDominated, :);
         end
 
         function gd = GD(pf, truePF)
@@ -133,13 +233,6 @@ classdef MOMetrics < handle
             %
             % 衡量近似Pareto前沿到真实Pareto前沿的平均距离
             % GD值越小越好
-            %
-            % 输入参数:
-            %   pf     - 近似Pareto前沿 (N x M)
-            %   truePF - 真实Pareto前沿 (P x M)
-            %
-            % 输出参数:
-            %   gd - 世代距离值
 
             arguments
                 pf (:,:) double
@@ -152,34 +245,24 @@ classdef MOMetrics < handle
                 return;
             end
 
-            totalDist = 0;
-            for i = 1:n
-                minDist = Inf;
-                for j = 1:size(truePF, 1)
-                    dist = norm(pf(i,:) - truePF(j,:));
-                    if dist < minDist
-                        minDist = dist;
-                    end
-                end
-                totalDist = totalDist + minDist^2;
+            nTrue = size(truePF, 1);
+            
+            distMatrix = zeros(n, nTrue);
+            for i = 1:nTrue
+                diff = pf - truePF(i, :);
+                distMatrix(:, i) = sqrt(sum(diff.^2, 2));
             end
             
-            gd = sqrt(totalDist) / n;
+            minDists = min(distMatrix, [], 2);
+            
+            gd = sqrt(sum(minDists.^2)) / n;
         end
 
         function igd = IGD(pf, truePF)
             % IGD Inverted Generational Distance - 逆世代距离
             %
             % 衡量真实Pareto前沿到近似Pareto前沿的平均距离
-            % 同时考虑收敛性和多样性
             % IGD值越小越好
-            %
-            % 输入参数:
-            %   pf     - 近似Pareto前沿 (N x M)
-            %   truePF - 真实Pareto前沿 (P x M)
-            %
-            % 输出参数:
-            %   igd - 逆世代距离值
 
             arguments
                 pf (:,:) double
@@ -192,37 +275,27 @@ classdef MOMetrics < handle
                 return;
             end
 
-            if size(pf, 1) == 0
+            n = size(pf, 1);
+            if n == 0
                 igd = Inf;
                 return;
             end
 
-            totalDist = 0;
-            for i = 1:p
-                minDist = Inf;
-                for j = 1:size(pf, 1)
-                    dist = norm(truePF(i,:) - pf(j,:));
-                    if dist < minDist
-                        minDist = dist;
-                    end
-                end
-                totalDist = totalDist + minDist;
+            distMatrix = zeros(p, n);
+            for i = 1:n
+                diff = truePF - pf(i, :);
+                distMatrix(:, i) = sqrt(sum(diff.^2, 2));
             end
             
-            igd = totalDist / p;
+            minDists = min(distMatrix, [], 2);
+            
+            igd = sum(minDists) / p;
         end
 
         function spacing = Spacing(pf)
             % Spacing 解集间距指标
             %
-            % 衡量解集中各个解之间距离的均匀性
             % Spacing值越小表示分布越均匀
-            %
-            % 输入参数:
-            %   pf - 近似Pareto前沿 (N x M)
-            %
-            % 输出参数:
-            %   spacing - 间距值
 
             arguments
                 pf (:,:) double
@@ -235,17 +308,12 @@ classdef MOMetrics < handle
             end
 
             d = zeros(n, 1);
+            
             for i = 1:n
-                minDist = Inf;
-                for j = 1:n
-                    if i ~= j
-                        dist = sum(abs(pf(i,:) - pf(j,:)));
-                        if dist < minDist
-                            minDist = dist;
-                        end
-                    end
+                others = pf([1:i-1, i+1:n], :);
+                if ~isempty(others)
+                    d(i) = min(sum(abs(others - pf(i, :)), 2));
                 end
-                d(i) = minDist;
             end
 
             dMean = mean(d);
@@ -255,16 +323,7 @@ classdef MOMetrics < handle
         function delta = Spread(pf, truePF)
             % Spread (Delta) 扩展度指标
             %
-            % 衡量解集在Pareto前沿上的分布程度
-            % 考虑边界解的覆盖和中间解的分布均匀性
             % Delta值越小越好
-            %
-            % 输入参数:
-            %   pf     - 近似Pareto前沿 (N x M)
-            %   truePF - 真实Pareto前沿 (P x M) (用于确定边界)
-            %
-            % 输出参数:
-            %   delta - 扩展度值
 
             arguments
                 pf (:,:) double
@@ -281,32 +340,22 @@ classdef MOMetrics < handle
 
             d = zeros(n, 1);
             for i = 1:n
-                minDist = Inf;
-                for j = 1:n
-                    if i ~= j
-                        dist = norm(pf(i,:) - pf(j,:));
-                        if dist < minDist
-                            minDist = dist;
-                        end
-                    end
-                end
-                d(i) = minDist;
+                others = pf([1:i-1, i+1:n], :);
+                d(i) = min(sqrt(sum((others - pf(i, :)).^2, 2)));
             end
             dMean = mean(d);
 
-            extremes = zeros(m, 2);
-            for k = 1:m
-                [~, idx] = min(pf(:, k));
-                extremes(k, 1) = idx;
-                [~, idx] = max(pf(:, k));
-                extremes(k, 2) = idx;
+            extremeIdx = unique([...
+                argmin(pf(:, 1)), argmax(pf(:, 1)); ...
+                argmin(pf(:, 2)), argmax(pf(:, 2)) ...
+            ]');
+            if m > 2
+                for k = 3:m
+                    extremeIdx = unique([extremeIdx, argmin(pf(:, k)), argmax(pf(:, k))]);
+                end
             end
-            extremeIdx = unique(extremes(:));
 
-            dExtremes = 0;
-            for idx = extremeIdx'
-                dExtremes = dExtremes + d(idx);
-            end
+            dExtremes = sum(d(extremeIdx));
 
             nEff = n - length(extremeIdx);
             if nEff > 0 && dMean > 0
@@ -320,14 +369,6 @@ classdef MOMetrics < handle
             % SetCoverage C-metric 集合覆盖度
             %
             % C(A,B) = 被A支配的B中解的比例
-            % C值越大表示A相对B越优
-            %
-            % 输入参数:
-            %   pfA - 近似Pareto前沿A (N x M)
-            %   pfB - 近似Pareto前沿B (P x M)
-            %
-            % 输出参数:
-            %   c - 覆盖度 [0,1]
 
             arguments
                 pfA (:,:) double
@@ -340,10 +381,12 @@ classdef MOMetrics < handle
                 return;
             end
 
+            nA = size(pfA, 1);
             dominated = 0;
+            
             for i = 1:nB
-                for j = 1:size(pfA, 1)
-                    if MOMetrics.dominates(pfA(j,:), pfB(i,:))
+                for j = 1:nA
+                    if all(pfA(j, :) <= pfB(i, :)) && any(pfA(j, :) < pfB(i, :))
                         dominated = dominated + 1;
                         break;
                     end
@@ -356,15 +399,7 @@ classdef MOMetrics < handle
         function eps = EpsilonIndicator(pfA, pfB)
             % EpsilonIndicator 加法epsilon指标
             %
-            % 最小的epsilon值，使得A中每个解平移epsilon后都能支配B中某解
             % 值越小越好，小于0表示A优于B
-            %
-            % 输入参数:
-            %   pfA - 近似Pareto前沿A (N x M)
-            %   pfB - 近似Pareto前沿B (P x M)
-            %
-            % 输出参数:
-            %   eps - epsilon值
 
             arguments
                 pfA (:,:) double
@@ -373,7 +408,6 @@ classdef MOMetrics < handle
 
             nA = size(pfA, 1);
             nB = size(pfB, 1);
-            m = size(pfA, 2);
 
             if nA == 0 || nB == 0
                 eps = Inf;
@@ -382,13 +416,7 @@ classdef MOMetrics < handle
 
             eps = -Inf;
             for i = 1:nA
-                minEps = Inf;
-                for j = 1:nB
-                    maxDiff = max(pfA(i,:) - pfB(j,:));
-                    if maxDiff < minEps
-                        minEps = maxDiff;
-                    end
-                end
+                minEps = min(max(pfA(i, :) - pfB, [], 2));
                 if minEps > eps
                     eps = minEps;
                 end
@@ -397,14 +425,6 @@ classdef MOMetrics < handle
 
         function metrics = computeAll(pf, truePF, refPoint)
             % computeAll 计算所有指标
-            %
-            % 输入参数:
-            %   pf       - 近似Pareto前沿 (N x M)
-            %   truePF   - 真实Pareto前沿 (P x M)
-            %   refPoint - 参考点 (1 x M)
-            %
-            % 输出参数:
-            %   metrics - 包含所有指标的结构体
 
             arguments
                 pf (:,:) double
@@ -423,13 +443,6 @@ classdef MOMetrics < handle
 
         function refPoint = suggestReferencePoint(truePF, margin)
             % suggestReferencePoint 根据真实Pareto前沿建议参考点
-            %
-            % 输入参数:
-            %   truePF - 真实Pareto前沿 (P x M)
-            %   margin - 边界裕度 (默认0.1, 即10%)
-            %
-            % 输出参数:
-            %   refPoint - 建议的参考点
 
             arguments
                 truePF (:,:) double
@@ -441,11 +454,12 @@ classdef MOMetrics < handle
             refPoint = maxVals + margin * rangeVals;
         end
     end
+end
 
-    methods (Static, Access = private)
-        function tf = dominates(a, b)
-            % 判断解a是否支配解b
-            tf = all(a <= b) && any(a < b);
-        end
-    end
+function idx = argmin(v)
+    [~, idx] = min(v);
+end
+
+function idx = argmax(v)
+    [~, idx] = max(v);
 end

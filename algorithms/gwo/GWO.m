@@ -130,10 +130,8 @@ classdef GWO < BaseAlgorithm
 
             % 边界检查并评估适应度
             for i = 1:N
-                % 边界约束（使用统一的BoundaryHandler）
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
+                obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
 
-                % 评估适应度
                 fitness = obj.evaluateSolution(obj.positions(i, :));
 
                 % 更新Alpha, Beta, Delta
@@ -218,36 +216,7 @@ classdef GWO < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('GWO:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('GWO:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

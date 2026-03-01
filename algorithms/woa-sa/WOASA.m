@@ -278,82 +278,13 @@ classdef WOASA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('WOASA:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 100;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('WOASA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 螺旋参数 b
-            if isfield(config, 'b')
-                validatedConfig.b = config.b;
-            else
-                validatedConfig.b = 1;
-            end
-
-            % 锦标赛参数
-            if isfield(config, 'tournamentParameter')
-                validatedConfig.tournamentParameter = config.tournamentParameter;
-            else
-                validatedConfig.tournamentParameter = 0.5;
-            end
-
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
+            
             if validatedConfig.tournamentParameter < 0 || validatedConfig.tournamentParameter > 1
                 error('WOASA:InvalidConfig', 'tournamentParameter must be in [0, 1]');
             end
-
-            % SA参数
-            if isfield(config, 'saMaxIterations')
-                validatedConfig.saMaxIterations = config.saMaxIterations;
-            else
-                validatedConfig.saMaxIterations = 30;
-            end
-
-            if isfield(config, 'saMaxSubIterations')
-                validatedConfig.saMaxSubIterations = config.saMaxSubIterations;
-            else
-                validatedConfig.saMaxSubIterations = 10;
-            end
-
-            if isfield(config, 'saInitialTemp')
-                validatedConfig.saInitialTemp = config.saInitialTemp;
-            else
-                validatedConfig.saInitialTemp = 0.1;
-            end
-
-            if isfield(config, 'saCoolingRate')
-                validatedConfig.saCoolingRate = config.saCoolingRate;
-            else
-                validatedConfig.saCoolingRate = 0.99;
-            end
-
             if validatedConfig.saCoolingRate <= 0 || validatedConfig.saCoolingRate > 1
                 error('WOASA:InvalidConfig', 'saCoolingRate must be in (0, 1]');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
             end
         end
     end

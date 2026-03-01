@@ -140,8 +140,7 @@ classdef SSA < BaseAlgorithm
                     end
                 end
 
-                obj.salpPositions(i, :) = shared.utils.BoundaryHandler.quickClip(...
-                    obj.salpPositions(i, :), lb, ub);
+                obj.salpPositions(i, :) = obj.clampToBounds(obj.salpPositions(i, :), lb, ub);
             end
 
             for i = 1:N
@@ -183,33 +182,7 @@ classdef SSA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('SSA:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('SSA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

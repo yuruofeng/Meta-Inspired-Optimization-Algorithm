@@ -235,12 +235,8 @@ classdef VPPSO < BaseAlgorithm
                 obj.velocities(i, velTooHigh) = obj.Vmax(velTooHigh);
                 obj.velocities(i, velTooLow) = obj.Vmin(velTooLow);
 
-                % 位置更新
                 obj.positions(i, :) = obj.positions(i, :) + obj.velocities(i, :);
-
-                % 边界检查
-                % 边界约束（使用统一的BoundaryHandler）
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
+                obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
             end
 
             % 第二种群: 围绕全局最优搜索
@@ -256,9 +252,7 @@ classdef VPPSO < BaseAlgorithm
                     end
                 end
 
-                % 边界检查
-                % 边界约束（使用统一的BoundaryHandler）
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
+                obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
             end
 
             % 评估并更新最优
@@ -311,91 +305,17 @@ classdef VPPSO < BaseAlgorithm
 
         function validatedConfig = validateConfig(obj, config)
             % validateConfig 验证并规范化配置参数
+            %
+            % 输入参数:
+            %   config - 原始配置结构体
+            %
+            % 输出参数:
+            %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 第一种群大小
-            if isfield(config, 'swarm1Size')
-                validatedConfig.swarm1Size = config.swarm1Size;
-            else
-                validatedConfig.swarm1Size = 15;
-            end
-
-            if validatedConfig.swarm1Size < 5
-                error('VPPSO:InvalidConfig', 'swarm1Size must be >= 5');
-            end
-
-            % 第二种群额外粒子数
-            if isfield(config, 'swarm2AddSize')
-                validatedConfig.swarm2AddSize = config.swarm2AddSize;
-            else
-                validatedConfig.swarm2AddSize = 15;
-            end
-
-            if validatedConfig.swarm2AddSize < 0
-                error('VPPSO:InvalidConfig', 'swarm2AddSize must be >= 0');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('VPPSO:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 惯性权重
-            if isfield(config, 'wMax')
-                validatedConfig.wMax = config.wMax;
-            else
-                validatedConfig.wMax = 0.9;
-            end
-
-            if isfield(config, 'wMin')
-                validatedConfig.wMin = config.wMin;
-            else
-                validatedConfig.wMin = 0.1;
-            end
-
-            % 学习因子
-            if isfield(config, 'c1')
-                validatedConfig.c1 = config.c1;
-            else
-                validatedConfig.c1 = 2;
-            end
-
-            if isfield(config, 'c2')
-                validatedConfig.c2 = config.c2;
-            else
-                validatedConfig.c2 = 2;
-            end
-
-            % 速度暂停概率
-            if isfield(config, 'velocityPauseRate')
-                validatedConfig.velocityPauseRate = config.velocityPauseRate;
-            else
-                validatedConfig.velocityPauseRate = 0.3;
-            end
-
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
+            
             if validatedConfig.velocityPauseRate < 0 || validatedConfig.velocityPauseRate > 1
                 error('VPPSO:InvalidConfig', 'velocityPauseRate must be in [0, 1]');
-            end
-
-            % 速度钳制因子
-            if isfield(config, 'velocityClampFactor')
-                validatedConfig.velocityClampFactor = config.velocityClampFactor;
-            else
-                validatedConfig.velocityClampFactor = 0.1;
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
             end
         end
     end

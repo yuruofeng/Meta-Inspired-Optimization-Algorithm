@@ -217,34 +217,14 @@ classdef IGWO < BaseAlgorithm
 
         function validatedConfig = validateConfig(obj, config)
             % validateConfig 验证并规范化配置参数
+            %
+            % 输入参数:
+            %   config - 原始配置结构体
+            %
+            % 输出参数:
+            %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('IGWO:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('IGWO:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

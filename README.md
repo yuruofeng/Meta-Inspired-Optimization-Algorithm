@@ -1,6 +1,6 @@
 # 元启发式优化算法平台
 
-**版本**: 2.1.0
+**版本**: 2.2.0
 **发布日期**: 2026年3月
 **作者**: RUOFENG YU
 
@@ -16,9 +16,10 @@
 - 🔌 **可扩展性**: 采用注册表模式，新增算法无需修改核心代码
 - 📊 **Web可视化**: 现代化React前端，支持算法对比、参数调整、实时进度
 - 🚀 **RESTful API**: FastAPI后端，支持单次优化、批量任务、WebSocket实时通信
-- ✅ **高质量**: 代码符合 `metaheuristic_spec.md` 规范，包含完整文档
+- ✅ **高质量**: 代码符合 `metaheuristic_spec.md` 规范，包含完整文档和单元测试
 - 📈 **标准测试**: 单目标23个 + 多目标13个国际通用基准测试函数
 - 🔬 **多目标支持**: 5种多目标优化算法，支持ZDT/DTLZ测试集和完整性能指标
+- ⚡ **性能优化**: 存档更新算法O(n log n)、Hypervolume计算支持高维快速近似
 
 ---
 
@@ -149,9 +150,11 @@
 ├── tests/                         # 测试脚本
 │   ├── run_all_tests.m            # 运行所有测试
 │   └── unit/                      # 单元测试
-│       ├── GOATest.m
-│       ├── PSOGSATest.m
-│       ├── HLBDATest.m
+│       ├── AlgorithmTestTemplate.m # 测试模板基类
+│       ├── GWOTest.m              # 灰狼算法测试
+│       ├── WOATest.m              # 鲸鱼算法测试
+│       ├── ALOTest.m              # 蚁狮算法测试
+│       ├── GOATest.m              # 蚱蜢算法测试
 │       ├── MOAlgorithmTest.m      # 多目标算法测试
 │       └── ...
 │
@@ -245,14 +248,14 @@
 
 ### 多目标性能指标
 
-| 指标 | 全称 | 说明 |
-|------|------|------|
-| HV | Hypervolume | 超体积，越大越好 |
-| IGD | Inverted Generational Distance | 逆世代距离，越小越好 |
-| GD | Generational Distance | 世代距离，越小越好 |
-| Spacing | - | 解集均匀性，越小越好 |
-| Spread | Δ | 扩展度，越小越好 |
-| C-metric | Set Coverage | 集合覆盖度 |
+| 指标 | 全称 | 说明 | 复杂度 |
+|------|------|------|--------|
+| HV | Hypervolume | 超体积，越大越好 | 2D: O(n log n), 3D: O(n²), 高维: 蒙特卡洛 |
+| IGD | Inverted Generational Distance | 逆世代距离，越小越好 | O(n×m) |
+| GD | Generational Distance | 世代距离，越小越好 | O(n×m) |
+| Spacing | - | 解集均匀性，越小越好 | O(n²) |
+| Spread | Δ | 扩展度，越小越好 | O(n²) |
+| C-metric | Set Coverage | 集合覆盖度 | O(n×m) |
 
 ---
 
@@ -448,6 +451,30 @@ WS   /ws/tasks/{taskId}           # WebSocket实时进度
 
 ---
 
+## 注意事项
+
+### 算法参数配置
+- `populationSize` 建议范围：20-100，最小值10
+- `maxIterations` 建议范围：100-1000
+- 多目标算法的 `archiveMaxSize` 建议与种群大小相同
+
+### 性能建议
+- 高维问题(>30维)建议增加种群大小和迭代次数
+- 多目标问题建议使用至少100次迭代以获得良好的Pareto前沿
+- Hypervolume计算在高维(>3目标)时自动使用蒙特卡洛近似
+
+### 常见问题
+1. **MATLAB路径问题**: 运行前确保已添加项目根目录到MATLAB路径
+   ```matlab
+   addpath(genpath('your/project/path'));
+   ```
+
+2. **内存不足**: 大规模优化问题可能需要增加MATLAB的Java堆内存
+
+3. **收敛速度慢**: 尝试调整算法特定参数，如GWO的衰减因子或WOA的螺旋参数
+
+---
+
 ## 许可证
 
 本项目代码采用 BSD 2-Clause 许可证。
@@ -471,6 +498,14 @@ WS   /ws/tasks/{taskId}           # WebSocket实时进度
 ---
 
 ## 更新日志
+
+### v2.2.0 (2026年3月)
+- ⚡ **性能优化**: 存档更新算法从O(n²)优化到O(n log n)
+- ⚡ **性能优化**: Hypervolume计算支持2D/3D专用算法和蒙特卡洛近似
+- 🔧 **代码重构**: 统一validateConfig使用validateFromSchema，消除1000+行重复代码
+- ✅ **输入验证**: 添加完整的问题对象验证和异常处理机制
+- 🧪 **测试增强**: 新增8个算法单元测试文件，使用通用测试模板
+- 🗑️ **代码清理**: 移除过时的BoundaryHandler和RouletteWheelSelection测试
 
 ### v2.1.0 (2026年3月)
 - ✨ 新增多目标优化支持 (5种算法)

@@ -35,7 +35,6 @@ classdef BBA < BaseAlgorithm
         frequencies          % 频率向量 (N x 1)
         tempPositions        % 临时位置矩阵 (用于更新)
         bestPosition         % 全局最优位置 (1 x Dim, logical)
-        bestFitness          % 全局最优适应度
     end
 
     properties (Constant)
@@ -220,71 +219,20 @@ classdef BBA < BaseAlgorithm
 
         function validatedConfig = validateConfig(obj, config)
             % validateConfig 验证并规范化配置参数
+            %
+            % 输入参数:
+            %   config - 原始配置结构体
+            %
+            % 输出参数:
+            %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 20;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('BBA:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('BBA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 频率参数
-            if isfield(config, 'Qmin')
-                validatedConfig.Qmin = config.Qmin;
-            else
-                validatedConfig.Qmin = 0;
-            end
-
-            if isfield(config, 'Qmax')
-                validatedConfig.Qmax = config.Qmax;
-            else
-                validatedConfig.Qmax = 2;
-            end
-
-            % 响度
-            if isfield(config, 'loudness')
-                validatedConfig.loudness = config.loudness;
-            else
-                validatedConfig.loudness = 0.5;
-            end
-
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
+            
             if validatedConfig.loudness < 0 || validatedConfig.loudness > 1
                 error('BBA:InvalidConfig', 'loudness must be in [0, 1]');
             end
-
-            % 脉冲率
-            if isfield(config, 'pulseRate')
-                validatedConfig.pulseRate = config.pulseRate;
-            else
-                validatedConfig.pulseRate = 0.5;
-            end
-
             if validatedConfig.pulseRate < 0 || validatedConfig.pulseRate > 1
                 error('BBA:InvalidConfig', 'pulseRate must be in [0, 1]');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
             end
         end
     end

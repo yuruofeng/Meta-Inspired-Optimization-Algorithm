@@ -41,19 +41,22 @@ try
     fprintf('\n====================================\n');
     fprintf('Test Results Summary\n');
     fprintf('====================================\n');
-    fprintf('Total: %d\n', results.TotalCount);
-    fprintf('Passed: %d\n', results.PassedCount);
-    fprintf('Failed: %d\n', results.FailedCount);
-    fprintf('Incomplete: %d\n', results.IncompleteCount);
+    
+    totalTests = length(results);
+    passedTests = sum([results.Passed]);
+    failedTests = sum([results.Failed]);
+    
+    fprintf('Total: %d\n', totalTests);
+    fprintf('Passed: %d\n', passedTests);
+    fprintf('Failed: %d\n', failedTests);
     fprintf('Elapsed Time: %.2f seconds\n', elapsedTime);
 
-    % 计算覆盖率
-    if results.TotalCount > 0
-        passRate = (results.PassedCount / results.TotalCount) * 100;
+    if totalTests > 0
+        passRate = (passedTests / totalTests) * 100;
         fprintf('Pass Rate: %.1f%%\n', passRate);
     end
 
-    if results.PassedCount == results.TotalCount
+    if failedTests == 0
         fprintf('\n✓ All tests passed!\n');
         exit_code = 0;
     else

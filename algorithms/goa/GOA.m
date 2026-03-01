@@ -177,8 +177,7 @@ classdef GOA < BaseAlgorithm
             obj.positions = positionsTemp;
 
             for i = 1:N
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
-
+                obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
                 fitness = obj.evaluateSolution(obj.positions(i, :));
 
                 if fitness < obj.targetFitness
@@ -217,57 +216,7 @@ classdef GOA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('GOA:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('GOA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            if isfield(config, 'cMax')
-                validatedConfig.cMax = config.cMax;
-            else
-                validatedConfig.cMax = 1;
-            end
-
-            if isfield(config, 'cMin')
-                validatedConfig.cMin = config.cMin;
-            else
-                validatedConfig.cMin = 0.00004;
-            end
-
-            if isfield(config, 'f')
-                validatedConfig.f = config.f;
-            else
-                validatedConfig.f = 0.5;
-            end
-
-            if isfield(config, 'l')
-                validatedConfig.l = config.l;
-            else
-                validatedConfig.l = 1.5;
-            end
-
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

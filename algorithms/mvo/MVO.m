@@ -153,13 +153,9 @@ classdef MVO < BaseAlgorithm
             % 计算旅行距离率 (TDR) - Equation 3.4
             TDR = 1 - ((currentIter)^(1/6) / (MaxIter)^(1/6));
 
-            % 评估宇宙膨胀率（适应度）并更新最优
             inflationRates = zeros(1, N);
             for i = 1:N
-                % 边界约束（使用统一的BoundaryHandler）
-                obj.universePositions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.universePositions(i, :), lb, ub);
-
-                % 评估膨胀率
+                obj.universePositions(i, :) = obj.clampToBounds(obj.universePositions(i, :), lb, ub);
                 inflationRates(i) = obj.evaluateSolution(obj.universePositions(i, :));
 
                 % 精英策略：更新最优宇宙
@@ -265,62 +261,7 @@ classdef MVO < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('MVO:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('MVO:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 最小虫洞存在概率
-            if isfield(config, 'WEP_Min')
-                validatedConfig.WEP_Min = config.WEP_Min;
-            else
-                validatedConfig.WEP_Min = 0.2;
-            end
-
-            if validatedConfig.WEP_Min < 0 || validatedConfig.WEP_Min > 1
-                error('MVO:InvalidConfig', 'WEP_Min must be in [0, 1]');
-            end
-
-            % 最大虫洞存在概率
-            if isfield(config, 'WEP_Max')
-                validatedConfig.WEP_Max = config.WEP_Max;
-            else
-                validatedConfig.WEP_Max = 1.0;
-            end
-
-            if validatedConfig.WEP_Max < 0 || validatedConfig.WEP_Max > 1
-                error('MVO:InvalidConfig', 'WEP_Max must be in [0, 1]');
-            end
-
-            if validatedConfig.WEP_Max < validatedConfig.WEP_Min
-                error('MVO:InvalidConfig', 'WEP_Max must be >= WEP_Min');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

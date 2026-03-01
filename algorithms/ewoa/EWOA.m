@@ -35,7 +35,6 @@ classdef EWOA < BaseAlgorithm
     properties (Access = protected)
         positions            % 位置矩阵 (N x Dim)
         bestPosition         % 全局最优位置
-        bestFitness          % 全局最优适应度
         pool                 % 汇聚池结构体
         portionRate          % 迁移比例
     end
@@ -245,8 +244,7 @@ classdef EWOA < BaseAlgorithm
         end
 
         function pos = boundConstraint(obj, pos, lb, ub)
-            % 边界约束（使用统一的BoundaryHandler）
-            pos = shared.utils.BoundaryHandler.quickClip(pos, lb, ub);
+            pos = obj.clampToBounds(pos, lb, ub);
         end
 
         function tf = shouldStop(obj)
@@ -262,69 +260,7 @@ classdef EWOA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('EWOA:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('EWOA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 螺旋参数
-            if isfield(config, 'b')
-                validatedConfig.b = config.b;
-            else
-                validatedConfig.b = 1;
-            end
-
-            if validatedConfig.b < 0
-                error('EWOA:InvalidConfig', 'b must be >= 0');
-            end
-
-            % 汇聚池大小倍数
-            if isfield(config, 'poolKappa')
-                validatedConfig.poolKappa = config.poolKappa;
-            else
-                validatedConfig.poolKappa = 1.5;
-            end
-
-            if validatedConfig.poolKappa < 1
-                error('EWOA:InvalidConfig', 'poolKappa must be >= 1');
-            end
-
-            % 迁移比例
-            if isfield(config, 'portionRate')
-                validatedConfig.portionRate = config.portionRate;
-            else
-                validatedConfig.portionRate = 20;
-            end
-
-            if validatedConfig.portionRate < 1
-                error('EWOA:InvalidConfig', 'portionRate must be >= 1');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

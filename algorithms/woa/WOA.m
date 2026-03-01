@@ -126,12 +126,8 @@ classdef WOA < BaseAlgorithm
             MaxIter = obj.config.maxIterations;
             currentIter = obj.currentIteration + 1;
 
-            % 边界检查并评估适应度
             for i = 1:N
-                % 边界约束（使用统一的BoundaryHandler）
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
-
-                % 评估适应度
+                obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
                 fitness = obj.evaluateSolution(obj.positions(i, :));
 
                 % 更新领导者
@@ -214,47 +210,7 @@ classdef WOA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('WOA:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('WOA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 螺旋参数 b
-            if isfield(config, 'b')
-                validatedConfig.b = config.b;
-            else
-                validatedConfig.b = 1;
-            end
-
-            if validatedConfig.b < 0
-                error('WOA:InvalidConfig', 'b must be >= 0');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

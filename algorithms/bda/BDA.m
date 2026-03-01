@@ -256,94 +256,13 @@ classdef BDA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('BDA:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('BDA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 权重参数
-            if isfield(config, 'separationWeight')
-                validatedConfig.separationWeight = config.separationWeight;
-            else
-                validatedConfig.separationWeight = 0.1;
-            end
-
-            if isfield(config, 'alignmentWeight')
-                validatedConfig.alignmentWeight = config.alignmentWeight;
-            else
-                validatedConfig.alignmentWeight = 0.1;
-            end
-
-            if isfield(config, 'cohesionWeight')
-                validatedConfig.cohesionWeight = config.cohesionWeight;
-            else
-                validatedConfig.cohesionWeight = 0.1;
-            end
-
-            if isfield(config, 'foodWeight')
-                validatedConfig.foodWeight = config.foodWeight;
-            else
-                validatedConfig.foodWeight = 0.1;
-            end
-
-            if isfield(config, 'enemyWeight')
-                validatedConfig.enemyWeight = config.enemyWeight;
-            else
-                validatedConfig.enemyWeight = 0.1;
-            end
-
-            % 惯性权重
-            if isfield(config, 'wMax')
-                validatedConfig.wMax = config.wMax;
-            else
-                validatedConfig.wMax = 0.9;
-            end
-
-            if isfield(config, 'wMin')
-                validatedConfig.wMin = config.wMin;
-            else
-                validatedConfig.wMin = 0.4;
-            end
-
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
+            
             if validatedConfig.wMin > validatedConfig.wMax
                 error('BDA:InvalidConfig', 'wMin must be <= wMax');
             end
-
-            % 最大步长
-            if isfield(config, 'maxStep')
-                validatedConfig.maxStep = config.maxStep;
-            else
-                validatedConfig.maxStep = 6;
-            end
-
             if validatedConfig.maxStep <= 0
                 error('BDA:InvalidConfig', 'maxStep must be > 0');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
             end
         end
     end

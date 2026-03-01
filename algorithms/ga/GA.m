@@ -231,108 +231,17 @@ classdef GA < BaseAlgorithm
 
         function validatedConfig = validateConfig(obj, config)
             % validateConfig 验证并规范化配置参数
+            %
+            % 输入参数:
+            %   config - 原始配置结构体
+            %
+            % 输出参数:
+            %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 50;
-            end
-
-            if validatedConfig.populationSize < 4
-                error('GA:InvalidConfig', 'populationSize must be >= 4');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('GA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 变异概率
-            if isfield(config, 'mutationRate')
-                validatedConfig.mutationRate = config.mutationRate;
-            else
-                validatedConfig.mutationRate = 0.01;
-            end
-
-            if validatedConfig.mutationRate < 0 || validatedConfig.mutationRate > 1
-                error('GA:InvalidConfig', 'mutationRate must be in [0, 1]');
-            end
-
-            % 交叉概率
-            if isfield(config, 'crossoverRate')
-                validatedConfig.crossoverRate = config.crossoverRate;
-            else
-                validatedConfig.crossoverRate = 0.9;
-            end
-
-            if validatedConfig.crossoverRate < 0 || validatedConfig.crossoverRate > 1
-                error('GA:InvalidConfig', 'crossoverRate must be in [0, 1]');
-            end
-
-            % 精英保留数
-            if isfield(config, 'elitismCount')
-                validatedConfig.elitismCount = config.elitismCount;
-            else
-                validatedConfig.elitismCount = 2;
-            end
-
-            if validatedConfig.elitismCount < 0
-                error('GA:InvalidConfig', 'elitismCount must be >= 0');
-            end
-
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
+            
             if validatedConfig.elitismCount >= validatedConfig.populationSize
                 error('GA:InvalidConfig', 'elitismCount must be < populationSize');
-            end
-
-            % 选择类型
-            if isfield(config, 'selection')
-                validatedConfig.selection = validatestring(config.selection, {'tournament', 'roulette'});
-            else
-                validatedConfig.selection = 'tournament';
-            end
-
-            % 锦标赛大小
-            if isfield(config, 'tournamentSize')
-                validatedConfig.tournamentSize = config.tournamentSize;
-            else
-                validatedConfig.tournamentSize = 3;
-            end
-
-            % 交叉类型
-            if isfield(config, 'crossover')
-                validatedConfig.crossover = validatestring(config.crossover, {'uniform'});
-            else
-                validatedConfig.crossover = 'uniform';
-            end
-
-            % 变异类型
-            if isfield(config, 'mutation')
-                validatedConfig.mutation = validatestring(config.mutation, {'gaussian'});
-            else
-                validatedConfig.mutation = 'gaussian';
-            end
-
-            % 高斯变异参数
-            if isfield(config, 'sigma')
-                validatedConfig.sigma = config.sigma;
-            else
-                validatedConfig.sigma = 0.1;
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
             end
         end
     end

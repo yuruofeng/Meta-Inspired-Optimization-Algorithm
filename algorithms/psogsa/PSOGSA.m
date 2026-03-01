@@ -226,7 +226,7 @@ classdef PSOGSA < BaseAlgorithm
             lb = obj.problem.lb;
             ub = obj.problem.ub;
             for i = 1:N
-                obj.positions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.positions(i, :), lb, ub);
+                obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
             end
 
             if obj.gBestFitness < obj.bestFitness
@@ -259,69 +259,7 @@ classdef PSOGSA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('PSOGSA:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('PSOGSA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            if isfield(config, 'wMax')
-                validatedConfig.wMax = config.wMax;
-            else
-                validatedConfig.wMax = 0.9;
-            end
-
-            if isfield(config, 'wMin')
-                validatedConfig.wMin = config.wMin;
-            else
-                validatedConfig.wMin = 0.5;
-            end
-
-            if isfield(config, 'G0')
-                validatedConfig.G0 = config.G0;
-            else
-                validatedConfig.G0 = 1;
-            end
-
-            if isfield(config, 'alpha')
-                validatedConfig.alpha = config.alpha;
-            else
-                validatedConfig.alpha = 20;
-            end
-
-            if isfield(config, 'c1')
-                validatedConfig.c1 = config.c1;
-            else
-                validatedConfig.c1 = 0.5;
-            end
-
-            if isfield(config, 'c2')
-                validatedConfig.c2 = config.c2;
-            else
-                validatedConfig.c2 = 0.5;
-            end
-
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 

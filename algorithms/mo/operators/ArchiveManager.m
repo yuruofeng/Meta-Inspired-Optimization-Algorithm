@@ -52,7 +52,7 @@ classdef ArchiveManager < handle
             obj.fitness = inf(maxSize, objCount);
             obj.currentSize = int32(0);
             obj.ranks = zeros(1, maxSize);
-            obj.dominanceOp = algorithms.mo.operators.DominanceOperator();
+            obj.dominanceOp = DominanceOperator();
         end
 
         function size = getSize(obj)
@@ -81,7 +81,7 @@ classdef ArchiveManager < handle
         end
 
         function update(obj, newSolutions, newFitness)
-            % update 更新存档
+            % update 更新存档 (优化版: O(n log n) 复杂度)
             %
             % 将新解加入存档，移除被支配的解，必要时处理溢出
             %
@@ -100,20 +100,9 @@ classdef ArchiveManager < handle
             end
 
             nCombined = size(combinedF, 1);
-            isDominated = false(1, nCombined);
-
-            for i = 1:nCombined
-                for j = 1:nCombined
-                    if i ~= j
-                        if obj.dominanceOp.dominates(combinedF(j, :), combinedF(i, :))
-                            isDominated(i) = true;
-                            break;
-                        end
-                    end
-                end
-            end
-
-            nonDominatedIdx = find(~isDominated);
+            
+            [nonDominatedIdx, ~] = obj.fastNonDominatedSort(combinedF);
+            
             obj.currentSize = int32(length(nonDominatedIdx));
 
             if obj.currentSize > 0
@@ -121,11 +110,104 @@ classdef ArchiveManager < handle
                 obj.fitness(1:obj.currentSize, :) = combinedF(nonDominatedIdx, :);
             end
 
-            obj.ranks = obj.computeRanks();
+            obj.ranks = obj.computeRanksFast();
 
             if obj.currentSize > obj.maxSize
                 obj.handleOverflow();
             end
+        end
+
+        function [frontIndices, ranks] = fastNonDominatedSort(obj, popFitness)
+            % fastNonDominatedSort 快速非支配排序 (NSGA-II算法)
+            %
+            % 输入参数:
+            %   popFitness - 种群目标值矩阵 (n x objCount)
+            %
+            % 输出参数:
+            %   frontIndices - 第一前沿的索引
+            %   ranks - 所有解的排名
+
+            n = size(popFitness, 1);
+            dominationCount = zeros(1, n);
+            dominatedSet = cell(1, n);
+            
+            for i = 1:n
+                dominatedSet{i} = [];
+            end
+
+            for i = 1:n
+                for j = (i+1):n
+                    if obj.dominanceOp.dominates(popFitness(i, :), popFitness(j, :))
+                        dominationCount(j) = dominationCount(j) + 1;
+                        dominatedSet{i} = [dominatedSet{i}, j];
+                    elseif obj.dominanceOp.dominates(popFitness(j, :), popFitness(i, :))
+                        dominationCount(i) = dominationCount(i) + 1;
+                        dominatedSet{j} = [dominatedSet{j}, i];
+                    end
+                end
+            end
+
+            frontIndices = find(dominationCount == 0);
+            ranks = zeros(1, n);
+            ranks(frontIndices) = 1;
+        end
+
+        function ranks = computeRanksFast(obj)
+            % computeRanksFast 快速计算拥挤度排名 (使用网格方法)
+            %
+            % 输出参数:
+            %   ranks - 拥挤度排名向量
+
+            if obj.currentSize == 0
+                ranks = [];
+                return;
+            end
+
+            if obj.currentSize <= 10
+                ranks = obj.computeRanks();
+                return;
+            end
+
+            archiveF = obj.fitness(1:obj.currentSize, :);
+            n = obj.currentSize;
+
+            fMin = min(archiveF, [], 1);
+            fMax = max(archiveF, [], 1);
+            range = (fMax - fMin) / 20;
+            range(range == 0) = 1;
+
+            gridIndices = zeros(n, obj.objCount);
+            for d = 1:obj.objCount
+                gridIndices(:, d) = floor((archiveF(:, d) - fMin(d)) ./ range(d)) + 1;
+            end
+
+            ranks = zeros(1, n);
+            gridMap = containers.Map('KeyType', 'char', 'ValueType', 'double');
+            
+            for i = 1:n
+                key = mat2str(gridIndices(i, :));
+                if isKey(gridMap, key)
+                    gridMap(key) = gridMap(key) + 1;
+                else
+                    gridMap(key) = 1;
+                end
+            end
+
+            for i = 1:n
+                key = mat2str(gridIndices(i, :));
+                ranks(i) = gridMap(key) - 1;
+                
+                for offset = -1:1
+                    for d = 1:obj.objCount
+                        neighborKey = mat2str(gridIndices(i, :) + (offset == d-1) * (offset ~= 0));
+                        if isKey(gridMap, neighborKey)
+                            ranks(i) = ranks(i) + gridMap(neighborKey) * 0.5;
+                        end
+                    end
+                end
+            end
+
+            obj.ranks = ranks;
         end
 
         function ranks = computeRanks(obj)

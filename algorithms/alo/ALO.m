@@ -202,36 +202,7 @@ classdef ALO < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('ALO:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('ALO:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 
@@ -244,10 +215,8 @@ classdef ALO < BaseAlgorithm
             %   ub - 上边界
 
 
-            % 使用统一的边界处理器进行边界约束
             for i = 1:size(obj.antPositions, 1)
-                obj.antPositions(i, :) = shared.utils.BoundaryHandler.quickClip(...
-                    obj.antPositions(i, :), lb, ub);
+                obj.antPositions(i, :) = obj.clampToBounds(obj.antPositions(i, :), lb, ub);
             end
         end
     end

@@ -268,86 +268,20 @@ classdef VPSO < BaseAlgorithm
 
         function validatedConfig = validateConfig(obj, config)
             % validateConfig 验证并规范化配置参数
+            %
+            % 输入参数:
+            %   config - 原始配置结构体
+            %
+            % 输出参数:
+            %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 5
-                error('VPSO:InvalidConfig', 'populationSize must be >= 5');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('VPSO:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 传递函数类型
-            if isfield(config, 'transferFunctionType')
-                validatedConfig.transferFunctionType = validatestring(...
-                    config.transferFunctionType, ...
-                    {'S1', 'S2', 'S3', 'S4', 'V1', 'V2', 'V3', 'V4'});
-            else
-                validatedConfig.transferFunctionType = 'V4';
-            end
-
-            % 惯性权重
-            if isfield(config, 'wMax')
-                validatedConfig.wMax = config.wMax;
-            else
-                validatedConfig.wMax = 0.9;
-            end
-
-            if isfield(config, 'wMin')
-                validatedConfig.wMin = config.wMin;
-            else
-                validatedConfig.wMin = 0.4;
-            end
-
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
+            
             if validatedConfig.wMin > validatedConfig.wMax
                 error('VPSO:InvalidConfig', 'wMin must be <= wMax');
             end
-
-            % 学习因子
-            if isfield(config, 'c1')
-                validatedConfig.c1 = config.c1;
-            else
-                validatedConfig.c1 = 2;
-            end
-
-            if isfield(config, 'c2')
-                validatedConfig.c2 = config.c2;
-            else
-                validatedConfig.c2 = 2;
-            end
-
-            % 最大速度
-            if isfield(config, 'vMax')
-                validatedConfig.vMax = config.vMax;
-            else
-                validatedConfig.vMax = 6;
-            end
-
             if validatedConfig.vMax <= 0
                 error('VPSO:InvalidConfig', 'vMax must be > 0');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
             end
         end
     end

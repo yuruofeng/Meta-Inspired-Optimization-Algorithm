@@ -222,94 +222,16 @@ classdef SA < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 初始温度
-            if isfield(config, 'initialTemp')
-                validatedConfig.initialTemp = config.initialTemp;
-            else
-                validatedConfig.initialTemp = 100;
-            end
-
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
+            
             if validatedConfig.initialTemp <= 0
                 error('SA:InvalidConfig', 'initialTemp must be > 0');
             end
-
-            % 终止温度
-            if isfield(config, 'finalTemp')
-                validatedConfig.finalTemp = config.finalTemp;
-            else
-                validatedConfig.finalTemp = 1e-6;
+            if validatedConfig.coolingRate <= 0
+                error('SA:InvalidConfig', 'coolingRate must be > 0');
             end
-
-            if validatedConfig.finalTemp < 0
-                error('SA:InvalidConfig', 'finalTemp must be >= 0');
-            end
-
-            % 冷却率
-            if isfield(config, 'coolingRate')
-                validatedConfig.coolingRate = config.coolingRate;
-            else
-                validatedConfig.coolingRate = 0.99;
-            end
-
-            if validatedConfig.coolingRate <= 0 || validatedConfig.coolingRate > 1
-                error('SA:InvalidConfig', 'coolingRate must be in (0, 1]');
-            end
-
-            % 每温度迭代次数
-            if isfield(config, 'iterationsPerTemp')
-                validatedConfig.iterationsPerTemp = config.iterationsPerTemp;
-            else
-                validatedConfig.iterationsPerTemp = 10;
-            end
-
-            if validatedConfig.iterationsPerTemp < 1
-                error('SA:InvalidConfig', 'iterationsPerTemp must be >= 1');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 1000;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('SA:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 邻居类型
-            if isfield(config, 'neighborType')
-                validatedConfig.neighborType = validatestring(config.neighborType, ...
-                    {'gaussian', 'uniform', 'cauchy'});
-            else
-                validatedConfig.neighborType = 'gaussian';
-            end
-
-            % 步长
-            if isfield(config, 'stepSize')
-                validatedConfig.stepSize = config.stepSize;
-            else
-                validatedConfig.stepSize = 0.1;
-            end
-
             if validatedConfig.stepSize <= 0
                 error('SA:InvalidConfig', 'stepSize must be > 0');
-            end
-
-            % 自适应步长
-            if isfield(config, 'adaptiveStep')
-                validatedConfig.adaptiveStep = config.adaptiveStep;
-            else
-                validatedConfig.adaptiveStep = true;
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
             end
         end
     end

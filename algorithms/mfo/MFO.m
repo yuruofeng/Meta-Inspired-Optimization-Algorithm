@@ -133,12 +133,8 @@ classdef MFO < BaseAlgorithm
             % 计算当前火焰数量 (Equation 3.14)
             flameNo = round(N - currentIter * ((N - 1) / MaxIter));
 
-            % 边界检查并评估飞蛾适应度
             for i = 1:N
-                % 边界约束（使用统一的BoundaryHandler）
-                obj.mothPositions(i, :) = shared.utils.BoundaryHandler.quickClip(obj.mothPositions(i, :), lb, ub);
-
-                % 评估适应度
+                obj.mothPositions(i, :) = obj.clampToBounds(obj.mothPositions(i, :), lb, ub);
                 mothFitness(i) = obj.evaluateSolution(obj.mothPositions(i, :));
             end
 
@@ -225,47 +221,7 @@ classdef MFO < BaseAlgorithm
             % 输出参数:
             %   validatedConfig - 验证后的配置结构体
 
-            validatedConfig = struct();
-
-            % 种群大小
-            if isfield(config, 'populationSize')
-                validatedConfig.populationSize = config.populationSize;
-            else
-                validatedConfig.populationSize = 30;
-            end
-
-            if validatedConfig.populationSize < 10
-                error('MFO:InvalidConfig', 'populationSize must be >= 10');
-            end
-
-            % 最大迭代次数
-            if isfield(config, 'maxIterations')
-                validatedConfig.maxIterations = config.maxIterations;
-            else
-                validatedConfig.maxIterations = 500;
-            end
-
-            if validatedConfig.maxIterations < 1
-                error('MFO:InvalidConfig', 'maxIterations must be >= 1');
-            end
-
-            % 螺旋形状常数 b
-            if isfield(config, 'b')
-                validatedConfig.b = config.b;
-            else
-                validatedConfig.b = 1;
-            end
-
-            if validatedConfig.b < 0
-                error('MFO:InvalidConfig', 'b must be >= 0');
-            end
-
-            % 详细输出
-            if isfield(config, 'verbose')
-                validatedConfig.verbose = config.verbose;
-            else
-                validatedConfig.verbose = true;
-            end
+            validatedConfig = BaseAlgorithm.validateFromSchema(config, obj.PARAM_SCHEMA);
         end
     end
 
