@@ -77,7 +77,7 @@ classdef RobustBenchmarkFunctionsTest < matlab.unittest.TestCase
 
         function testR2Biased2(testCase)
             % 测试R2函数
-            [lb, ub, dim, fobj] = RobustBenchmarkFunctions.get('R2');
+            [lb, ub, ~, fobj] = RobustBenchmarkFunctions.get('R2');
             
             testCase.assertEqual(lb, -100);
             testCase.assertEqual(ub, 100);
@@ -101,7 +101,7 @@ classdef RobustBenchmarkFunctionsTest < matlab.unittest.TestCase
 
         function testR4Deceptive2(testCase)
             % 测试R4函数
-            [lb, ub, dim, fobj] = RobustBenchmarkFunctions.get('R4');
+            [~, ~, ~, fobj] = RobustBenchmarkFunctions.get('R4');
             
             x = [0.5, 0.5];
             fitness = fobj(x);
@@ -122,7 +122,7 @@ classdef RobustBenchmarkFunctionsTest < matlab.unittest.TestCase
 
         function testR6Multimodal1(testCase)
             % 测试R6函数
-            [lb, ub, dim, fobj] = RobustBenchmarkFunctions.get('R6');
+            [~, ~, ~, fobj] = RobustBenchmarkFunctions.get('R6');
             
             x = [0.5, 0.5];
             fitness = fobj(x);
@@ -131,7 +131,7 @@ classdef RobustBenchmarkFunctionsTest < matlab.unittest.TestCase
 
         function testR7Multimodal2(testCase)
             % 测试R7函数
-            [lb, ub, dim, fobj] = RobustBenchmarkFunctions.get('R7');
+            [~, ~, ~, fobj] = RobustBenchmarkFunctions.get('R7');
             
             x = [0.5, 0.5];
             fitness = fobj(x);
@@ -140,7 +140,7 @@ classdef RobustBenchmarkFunctionsTest < matlab.unittest.TestCase
 
         function testR8Flat(testCase)
             % 测试R8函数
-            [lb, ub, dim, fobj] = RobustBenchmarkFunctions.get('R8');
+            [~, ~, ~, fobj] = RobustBenchmarkFunctions.get('R8');
             
             x = [0.5, 0.5];
             fitness = fobj(x);

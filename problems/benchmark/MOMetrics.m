@@ -204,7 +204,7 @@ classdef MOMetrics < handle
 
         function pf = filterDominated(pf)
             % filterDominated 过滤掉被支配的解
-            [n, m] = size(pf);
+            n = size(pf, 1);
             if n <= 1
                 return;
             end
@@ -320,14 +320,14 @@ classdef MOMetrics < handle
             spacing = sqrt(sum((d - dMean).^2) / (n - 1));
         end
 
-        function delta = Spread(pf, truePF)
+        function delta = Spread(pf, ~)
             % Spread (Delta) 扩展度指标
             %
             % Delta值越小越好
 
             arguments
                 pf (:,:) double
-                truePF (:,:) double
+                ~ (:,:) double
             end
 
             n = size(pf, 1);

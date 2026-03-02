@@ -99,8 +99,6 @@ classdef ArchiveManager < handle
                 combinedF = [obj.fitness(1:obj.currentSize, :); newFitness];
             end
 
-            nCombined = size(combinedF, 1);
-            
             [nonDominatedIdx, ~] = obj.fastNonDominatedSort(combinedF);
             
             obj.currentSize = int32(length(nonDominatedIdx));
@@ -250,8 +248,8 @@ classdef ArchiveManager < handle
             % 当存档大小超过最大容量时，根据拥挤度移除多余的解
 
             while obj.currentSize > obj.maxSize
-                ranks = obj.ranks(1:obj.currentSize);
-                [~, maxIdx] = max(ranks);
+                crowdingRanks = obj.ranks(1:obj.currentSize);
+                [~, maxIdx] = max(crowdingRanks);
 
                 obj.solutions(maxIdx:obj.currentSize-1, :) = ...
                     obj.solutions(maxIdx+1:obj.currentSize, :);
@@ -321,12 +319,12 @@ classdef ArchiveManager < handle
                 return;
             end
 
-            ranks = obj.ranks(1:obj.currentSize);
+            crowdingRanks = obj.ranks(1:obj.currentSize);
 
             if useInverse
-                probs = 1 ./ (ranks + 1);
+                probs = 1 ./ (crowdingRanks + 1);
             else
-                probs = ranks + 1;
+                probs = crowdingRanks + 1;
             end
 
             probs = probs / sum(probs);
