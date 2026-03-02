@@ -64,7 +64,8 @@ export const useAlgorithmStore = create<AlgorithmState>((set, get) => ({
 
   resetConfig: (id) => {
     const { configs } = get();
-    const { [id]: _, ...rest } = configs;
+    const rest = { ...configs };
+    delete rest[id];
     set({ configs: rest });
   },
 
@@ -82,7 +83,6 @@ export const useAlgorithmStore = create<AlgorithmState>((set, get) => ({
     const schemaDefaults: Record<string, number | boolean | string> = {};
 
     for (const [key, schema] of Object.entries(algorithm.paramSchema)) {
-      savedConfig[key as keyof AlgorithmConfig];
       schemaDefaults[key] = schema.default;
     }
 

@@ -6,8 +6,8 @@ import {
   getRobustBenchmarkById,
   getRobustBenchmarksByType,
   getRobustBenchmarkIds,
-} from '../robustBenchmarks'
-import type { RobustBenchmarkType } from '../../types'
+} from './robustBenchmarks'
+import type { RobustBenchmarkType, RobustBenchmarkFunction } from '../types'
 
 describe('robustBenchmarks', () => {
   describe('ROBUST_BENCHMARK_FUNCTIONS', () => {
@@ -16,12 +16,12 @@ describe('robustBenchmarks', () => {
     })
 
     it('should have correct function IDs from R1 to R8', () => {
-      const ids = ROBUST_BENCHMARK_FUNCTIONS.map(f => f.id)
+      const ids = ROBUST_BENCHMARK_FUNCTIONS.map((f: RobustBenchmarkFunction) => f.id)
       expect(ids).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'])
     })
 
     it('should have all required properties for each function', () => {
-      ROBUST_BENCHMARK_FUNCTIONS.forEach(func => {
+      ROBUST_BENCHMARK_FUNCTIONS.forEach((func: RobustBenchmarkFunction) => {
         expect(func).toHaveProperty('id')
         expect(func).toHaveProperty('name')
         expect(func).toHaveProperty('type')
@@ -34,7 +34,7 @@ describe('robustBenchmarks', () => {
     })
 
     it('should have dimension 2 for all functions', () => {
-      ROBUST_BENCHMARK_FUNCTIONS.forEach(func => {
+      ROBUST_BENCHMARK_FUNCTIONS.forEach((func: RobustBenchmarkFunction) => {
         expect(func.dimension).toBe(2)
       })
     })
@@ -88,19 +88,19 @@ describe('robustBenchmarks', () => {
     it('should return 2 Biased functions', () => {
       const biased = getRobustBenchmarksByType('Biased')
       expect(biased).toHaveLength(2)
-      expect(biased.every(f => f.type === 'Biased')).toBe(true)
+      expect(biased.every((f: RobustBenchmarkFunction) => f.type === 'Biased')).toBe(true)
     })
 
     it('should return 3 Deceptive functions', () => {
       const deceptive = getRobustBenchmarksByType('Deceptive')
       expect(deceptive).toHaveLength(3)
-      expect(deceptive.every(f => f.type === 'Deceptive')).toBe(true)
+      expect(deceptive.every((f: RobustBenchmarkFunction) => f.type === 'Deceptive')).toBe(true)
     })
 
     it('should return 2 Multimodal functions', () => {
       const multimodal = getRobustBenchmarksByType('Multimodal')
       expect(multimodal).toHaveLength(2)
-      expect(multimodal.every(f => f.type === 'Multimodal')).toBe(true)
+      expect(multimodal.every((f: RobustBenchmarkFunction) => f.type === 'Multimodal')).toBe(true)
     })
 
     it('should return 1 Flat function', () => {
@@ -163,16 +163,16 @@ describe('robustBenchmarks', () => {
   describe('delta values validation', () => {
     it('should have delta = 1 for Biased functions', () => {
       const biased = getRobustBenchmarksByType('Biased')
-      biased.forEach(f => {
+      biased.forEach((f: RobustBenchmarkFunction) => {
         expect(f.delta).toBe(1)
       })
     })
 
     it('should have delta = 0.01 for non-Biased functions', () => {
       const types: RobustBenchmarkType[] = ['Deceptive', 'Multimodal', 'Flat']
-      types.forEach(type => {
+      types.forEach((type: RobustBenchmarkType) => {
         const funcs = getRobustBenchmarksByType(type)
-        funcs.forEach(f => {
+        funcs.forEach((f: RobustBenchmarkFunction) => {
           expect(f.delta).toBe(0.01)
         })
       })

@@ -519,15 +519,3 @@ export function ComparisonIllustration({
     </div>
   );
 }
-
-// 导出所有插画
-export const illustrations = {
-  welcome: WelcomeIllustration,
-  empty: EmptyDataIllustration,
-  notFound: NotFoundIllustration,
-  serverError: ServerErrorIllustration,
-  loading: LoadingIllustration,
-  success: SuccessIllustration,
-  algorithm: AlgorithmIllustration,
-  comparison: ComparisonIllustration,
-};

@@ -4,7 +4,8 @@ import {
   BENCHMARK_TYPE_NAMES,
   getBenchmarkById,
   getBenchmarksByType,
-} from '../benchmarks'
+} from './benchmarks'
+import type { BenchmarkFunction } from '../types'
 
 describe('benchmarks', () => {
   describe('BENCHMARK_FUNCTIONS', () => {
@@ -13,13 +14,13 @@ describe('benchmarks', () => {
     })
 
     it('should have correct function IDs from F1 to F23', () => {
-      const ids = BENCHMARK_FUNCTIONS.map(f => f.id)
+      const ids = BENCHMARK_FUNCTIONS.map((f: BenchmarkFunction) => f.id)
       expect(ids[0]).toBe('F1')
       expect(ids[22]).toBe('F23')
     })
 
     it('should have all required properties for each function', () => {
-      BENCHMARK_FUNCTIONS.forEach(func => {
+      BENCHMARK_FUNCTIONS.forEach((func: BenchmarkFunction) => {
         expect(func).toHaveProperty('id')
         expect(func).toHaveProperty('name')
         expect(func).toHaveProperty('type')
