@@ -1,6 +1,6 @@
 # 元启发式优化算法平台
 
-**版本**: 2.2.0
+**版本**: 2.3.0
 **发布日期**: 2026年3月
 **作者**: RUOFENG YU
 
@@ -17,7 +17,7 @@
 - 📊 **Web可视化**: 现代化React前端，支持算法对比、参数调整、实时进度
 - 🚀 **RESTful API**: FastAPI后端，支持单次优化、批量任务、WebSocket实时通信
 - ✅ **高质量**: 代码符合 `metaheuristic_spec.md` 规范，包含完整文档和单元测试
-- 📈 **标准测试**: 单目标23个 + 多目标13个国际通用基准测试函数
+- 📈 **标准测试**: 单目标23个 + 鲁棒8个 + 多目标13个国际通用基准测试函数
 - 🔬 **多目标支持**: 5种多目标优化算法，支持ZDT/DTLZ测试集和完整性能指标
 - ⚡ **性能优化**: 存档更新算法O(n log n)、Hypervolume计算支持高维快速近似
 
@@ -111,6 +111,7 @@
 ├── problems/                      # 问题定义
 │   └── benchmark/
 │       ├── BenchmarkFunctions.m   # 23个单目标基准测试函数
+│       ├── RobustBenchmarkFunctions.m  # 8个鲁棒基准测试函数
 │       ├── MOBenchmarkProblems.m  # 13个多目标测试问题 (ZDT/DTLZ)
 │       └── MOMetrics.m            # 多目标性能评价指标
 │
@@ -222,6 +223,23 @@
 | F1-F7 | 单峰 | 30 | 0 |
 | F8-F13 | 多峰 | 30 | -12569.487 ~ 0 |
 | F14-F23 | 固定维度 | 2-6 | 各异 |
+
+### 鲁棒基准函数 (8个)
+
+这些函数专门设计用于测试优化算法的鲁棒性，包含各种障碍和困难。
+
+| 函数ID | 名称 | 类型 | 搜索空间 | 测试目的 |
+|--------|------|------|----------|----------|
+| R1 | TP_Biased1 | 偏置 | [-100, 100] | 处理搜索空间偏置 |
+| R2 | TP_Biased2 | 偏置 | [-100, 100] | 多偏置区域搜索 |
+| R3 | TP_Deceptive1 | 欺骗 | [0, 1] | 避免局部最优陷阱 |
+| R4 | TP_Deceptive2 | 欺骗 | [0, 1] | 密集局部最优处理 |
+| R5 | TP_Deceptive3 | 欺骗 | [0, 2] | 多象限欺骗结构 |
+| R6 | TP_Multimodal1 | 多模态 | [0, 1] | 全局搜索能力 |
+| R7 | TP_Multimodal2 | 多模态 | [0, 1] | 对称多模态结构 |
+| R8 | TP_Flat | 平坦 | [0, 1] | 平坦区域搜索 |
+
+**参考文献**: S. Mirjalili, A. Lewis, "Obstacles and difficulties for robust benchmark problems", Information Sciences, 2016
 
 ### 多目标测试问题 (13个)
 
@@ -359,6 +377,36 @@ igd = MOMetrics.IGD(result.paretoFront, truePF);
 fprintf('Hypervolume: %.4f, IGD: %.6f\n', hv, igd);
 ```
 
+#### 鲁棒优化测试
+
+```matlab
+% 1. 获取鲁棒测试函数
+[lb, ub, dim, fobj, delta] = RobustBenchmarkFunctions.get('R3');
+
+% 2. 创建问题对象
+problem = struct();
+problem.evaluate = fobj;
+problem.lb = lb * ones(1, dim);
+problem.ub = ub * ones(1, dim);
+problem.dim = dim;
+
+% 3. 配置算法
+config = struct('populationSize', 50, 'maxIterations', 200);
+
+% 4. 运行优化
+gwo = GWO(config);
+result = gwo.run(problem);
+
+% 5. 查看结果
+fprintf('最优适应度: %.6f\n', result.bestFitness);
+result.plotConvergence();
+
+% 6. 获取所有鲁棒函数列表
+list = RobustBenchmarkFunctions.list();
+info = RobustBenchmarkFunctions.getInfo('R3');
+fprintf('函数类型: %s, 描述: %s\n', info.type, info.description);
+```
+
 ---
 
 ## Web界面功能
@@ -445,6 +493,23 @@ WS   /ws/tasks/{taskId}           # WebSocket实时进度
 - Node.js 18+ 和 npm 9+
 - 现代浏览器 (Chrome, Firefox, Safari, Edge)
 
+### 前端测试
+```bash
+cd web-frontend
+
+# 安装依赖（首次运行）
+npm install
+
+# 运行测试
+npm test
+
+# 运行测试（监视模式）
+npm run test:watch
+
+# 运行测试并生成覆盖率报告
+npm run test:coverage
+```
+
 ### 后端API环境
 - Python 3.10+
 - MATLAB Engine API for Python（可选，无MATLAB时使用模拟模式）
@@ -492,12 +557,24 @@ WS   /ws/tasks/{taskId}           # WebSocket实时进度
 - **M. H. Nadimi-Shahraki et al.** - IGWO, EWOA算法发明者
 - **E. Zitzler et al.** - ZDT测试问题集
 - **K. Deb et al.** - DTLZ测试问题集
+- **S. Mirjalili, A. Lewis** - 鲁棒基准测试问题集
 
 感谢他们为元启发式优化领域做出的贡献。
 
 ---
 
 ## 更新日志
+
+### v2.3.0 (2026年3月)
+- ✨ **新增鲁棒基准测试函数**: 8个专门测试算法鲁棒性的基准函数
+  - R1-R2: 偏置函数 (Biased)
+  - R3-R5: 欺骗函数 (Deceptive)
+  - R6-R7: 多模态函数 (Multimodal)
+  - R8: 平坦函数 (Flat)
+- 🔗 **前端集成**: 新增鲁棒基准函数的TypeScript类型定义和常量
+- 🧪 **前端测试**: 配置Vitest测试框架，新增基准函数单元测试
+- 📚 **文档更新**: README新增鲁棒优化测试使用示例
+- 🗑️ **代码清理**: 删除原始Test_suite1文件夹，完成代码整合
 
 ### v2.2.0 (2026年3月)
 - ⚡ **性能优化**: 存档更新算法从O(n²)优化到O(n log n)

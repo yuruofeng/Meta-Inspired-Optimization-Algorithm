@@ -77,6 +77,21 @@ export interface BenchmarkFunction {
 
 export type BenchmarkType = 'Unimodal' | 'Multimodal' | 'Fixed-dimension Multimodal';
 
+// 鲁棒基准测试函数类型
+export type RobustBenchmarkType = 'Biased' | 'Deceptive' | 'Multimodal' | 'Flat';
+
+// 鲁棒基准测试函数
+export interface RobustBenchmarkFunction {
+  id: string;
+  name: string;
+  type: RobustBenchmarkType;
+  dimension: number;
+  lowerBound: number;
+  upperBound: number;
+  delta: number;
+  description: string;
+}
+
 // 问题定义
 export interface ProblemDefinition {
   id: string;
