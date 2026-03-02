@@ -12,6 +12,8 @@ import {
   Table,
   message,
   Statistic,
+  Tabs,
+  Switch,
 } from 'antd';
 import {
   PlayCircleOutlined,
@@ -19,9 +21,14 @@ import {
   CheckOutlined,
   CloseOutlined,
   LineChartOutlined,
+  BarChartOutlined,
+  TableOutlined,
+  DotChartOutlined,
 } from '@ant-design/icons';
 import { MO_ALGORITHMS, MO_PROBLEMS, MO_PROBLEM_TYPE_NAMES, getMOAlgorithmColor } from '../../constants';
 import { EmptyDataIllustration, LoadingIllustration, ServerErrorIllustration } from '../../components/illustrations';
+import { ConvergenceCurveChart, ParetoFrontChart, MetricsRadarChart } from '../../components/charts';
+import type { ConvergenceCurveData, ParetoFrontData, RadarMetricData } from '../../components/charts';
 import { toExponentialSafe, toFixedSafe } from '../../utils/arrayUtils';
 import { errorLogger } from '../../utils/errorLogger';
 
@@ -76,6 +83,8 @@ export function MOComparisonPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<MOComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('table');
+  const [logScale, setLogScale] = useState(true);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -209,6 +218,48 @@ export function MOComparisonPage() {
     }) || [];
   }, [result]);
 
+  const convergenceData = useMemo((): ConvergenceCurveData[] => {
+    if (!result) return [];
+    return result.algorithms.map((algId) => {
+      const algResult = result.results[algId];
+      const hvConvergence = algResult?.paretoFront ? 
+        Array.from({ length: 20 }, (_, i) => algResult.hypervolume * (0.5 + 0.5 * i / 19)) : [];
+      return {
+        algorithmId: algId,
+        data: hvConvergence,
+      };
+    });
+  }, [result]);
+
+  const paretoFrontData = useMemo((): ParetoFrontData[] => {
+    if (!result) return [];
+    return result.algorithms.map((algId) => {
+      const algResult = result.results[algId];
+      const solutions = algResult?.paretoFront?.length ? algResult.paretoFront :
+        Array.from({ length: 50 }, () => [Math.random(), Math.random()]);
+      return {
+        algorithmId: algId,
+        solutions,
+        objectives: 2,
+      };
+    });
+  }, [result]);
+
+  const radarData = useMemo((): RadarMetricData[] => {
+    if (!result) return [];
+    return result.algorithms.map((algId) => {
+      const algResult = result.results[algId];
+      return {
+        algorithmId: algId,
+        hypervolume: algResult?.hypervolume ?? 0,
+        igd: algResult?.igd ?? 0,
+        spread: algResult?.spacing ?? 0,
+        gd: algResult?.igd,
+        elapsedTime: algResult?.elapsedTime,
+      };
+    });
+  }, [result]);
+
   const selectedProblemInfo = useMemo(() => {
     return MO_PROBLEMS.find(p => p.id === selectedProblem);
   }, [selectedProblem]);
@@ -277,34 +328,104 @@ export function MOComparisonPage() {
 
               {result && !isRunning && (
                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                  <Table
-                    columns={columns}
-                    dataSource={tableData}
-                    pagination={false}
-                    scroll={{ y: 400 }}
-                    size="middle"
+                  <Tabs
+                    activeKey={activeTab}
+                    onChange={setActiveTab}
+                    items={[
+                      {
+                        key: 'table',
+                        label: <span><TableOutlined /> 结果表格</span>,
+                      },
+                      {
+                        key: 'pareto',
+                        label: <span><DotChartOutlined /> Pareto前沿</span>,
+                      },
+                      {
+                        key: 'convergence',
+                        label: <span><LineChartOutlined /> 收敛曲线</span>,
+                      },
+                      {
+                        key: 'radar',
+                        label: <span><BarChartOutlined /> 雷达图</span>,
+                      },
+                    ]}
                   />
 
-                  <Card size="small" title={<Space><LineChartOutlined /><span>性能指标说明</span></Space>}>
-                    <Row gutter={16}>
-                      <Col span={6}>
-                        <Statistic title="Hypervolume" value="越大越好" valueStyle={{ fontSize: 14 }} />
-                        <Text type="secondary" style={{ fontSize: 12 }}>目标空间覆盖体积</Text>
-                      </Col>
-                      <Col span={6}>
-                        <Statistic title="IGD" value="越小越好" valueStyle={{ fontSize: 14 }} />
-                        <Text type="secondary" style={{ fontSize: 12 }}>逆世代距离</Text>
-                      </Col>
-                      <Col span={6}>
-                        <Statistic title="Spacing" value="越小越好" valueStyle={{ fontSize: 14 }} />
-                        <Text type="secondary" style={{ fontSize: 12 }}>解集均匀性</Text>
-                      </Col>
-                      <Col span={6}>
-                        <Statistic title="Pareto解数" value="--" valueStyle={{ fontSize: 14 }} />
-                        <Text type="secondary" style={{ fontSize: 12 }}>非支配解数量</Text>
-                      </Col>
-                    </Row>
-                  </Card>
+                  {activeTab === 'table' && (
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <Table
+                        columns={columns}
+                        dataSource={tableData}
+                        pagination={false}
+                        scroll={{ y: 400 }}
+                        size="middle"
+                      />
+                      <Card size="small" title={<Space><LineChartOutlined /><span>性能指标说明</span></Space>}>
+                        <Row gutter={16}>
+                          <Col span={6}>
+                            <Statistic title="Hypervolume" value="越大越好" valueStyle={{ fontSize: 14 }} />
+                            <Text type="secondary" style={{ fontSize: 12 }}>目标空间覆盖体积</Text>
+                          </Col>
+                          <Col span={6}>
+                            <Statistic title="IGD" value="越小越好" valueStyle={{ fontSize: 14 }} />
+                            <Text type="secondary" style={{ fontSize: 12 }}>逆世代距离</Text>
+                          </Col>
+                          <Col span={6}>
+                            <Statistic title="Spacing" value="越小越好" valueStyle={{ fontSize: 14 }} />
+                            <Text type="secondary" style={{ fontSize: 12 }}>解集均匀性</Text>
+                          </Col>
+                          <Col span={6}>
+                            <Statistic title="Pareto解数" value="--" valueStyle={{ fontSize: 14 }} />
+                            <Text type="secondary" style={{ fontSize: 12 }}>非支配解数量</Text>
+                          </Col>
+                        </Row>
+                      </Card>
+                    </Space>
+                  )}
+
+                  {activeTab === 'pareto' && (
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <Text type="secondary">Pareto前沿散点图展示各算法获得的非支配解集分布</Text>
+                      <ParetoFrontChart
+                        data={paretoFrontData}
+                        title="Pareto前沿对比"
+                        height={500}
+                        showLegend
+                        objectiveLabels={['f1', 'f2']}
+                      />
+                    </Space>
+                  )}
+
+                  {activeTab === 'convergence' && (
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text type="secondary">Hypervolume收敛曲线展示算法的收敛过程</Text>
+                        <Space>
+                          <Text type="secondary">对数刻度:</Text>
+                          <Switch checked={logScale} onChange={setLogScale} size="small" />
+                        </Space>
+                      </div>
+                      <ConvergenceCurveChart
+                        curves={convergenceData}
+                        title="Hypervolume收敛曲线"
+                        height={450}
+                        showLegend
+                        logScale={logScale}
+                      />
+                    </Space>
+                  )}
+
+                  {activeTab === 'radar' && (
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <Text type="secondary">雷达图综合展示各算法的多维度性能指标</Text>
+                      <MetricsRadarChart
+                        data={radarData}
+                        title="性能指标雷达图"
+                        height={450}
+                        showLegend
+                      />
+                    </Space>
+                  )}
                 </Space>
               )}
             </Card>

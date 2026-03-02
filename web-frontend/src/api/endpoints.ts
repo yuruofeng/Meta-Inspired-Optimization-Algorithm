@@ -6,6 +6,7 @@ import { apiClient } from './client';
 import type {
   Algorithm,
   BenchmarkFunction,
+  RobustBenchmarkFunction,
   OptimizationRequest,
   OptimizationResult,
   ComparisonRequest,
@@ -51,6 +52,29 @@ export async function getBenchmarks(): Promise<BenchmarkFunction[]> {
  */
 export async function getBenchmark(id: string): Promise<BenchmarkFunction> {
   return apiClient.get<BenchmarkFunction>(`/api/v1/benchmarks/${id}`);
+}
+
+// ==================== 鲁棒基准函数 ====================
+
+/**
+ * 获取所有鲁棒基准函数
+ */
+export async function getRobustBenchmarks(): Promise<RobustBenchmarkFunction[]> {
+  return apiClient.get<RobustBenchmarkFunction[]>('/api/v1/robust-benchmarks');
+}
+
+/**
+ * 获取单个鲁棒基准函数
+ */
+export async function getRobustBenchmark(id: string): Promise<RobustBenchmarkFunction> {
+  return apiClient.get<RobustBenchmarkFunction>(`/api/v1/robust-benchmarks/${id}`);
+}
+
+/**
+ * 获取鲁棒基准函数类型
+ */
+export async function getRobustBenchmarkTypes(): Promise<{ id: string; name: string }[]> {
+  return apiClient.get<{ id: string; name: string }[]>('/api/v1/robust-benchmarks/types');
 }
 
 // ==================== 优化执行 ====================

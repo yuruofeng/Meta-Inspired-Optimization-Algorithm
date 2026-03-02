@@ -4,7 +4,6 @@ import {
   Row,
   Col,
   Typography,
-  Select,
   InputNumber,
   Button,
   Space,
@@ -13,6 +12,9 @@ import {
   Badge,
   message,
   Tabs,
+  Descriptions,
+  Tooltip,
+  Divider,
   Switch,
 } from 'antd';
 import {
@@ -21,33 +23,40 @@ import {
   CheckOutlined,
   CloseOutlined,
   LineChartOutlined,
+  InfoCircleOutlined,
+  ExperimentOutlined,
   BarChartOutlined,
   TableOutlined,
 } from '@ant-design/icons';
 import { useAlgorithmStore } from '../../stores';
-import { ALGORITHMS, BENCHMARK_FUNCTIONS, CATEGORY_NAMES, getAlgorithmColor } from '../../constants';
+import { ALGORITHMS, CATEGORY_NAMES, getAlgorithmColor } from '../../constants';
+import {
+  ROBUST_BENCHMARK_FUNCTIONS,
+  ROBUST_TYPE_NAMES,
+  ROBUST_TYPE_DESCRIPTIONS,
+} from '../../constants/robustBenchmarks';
 import { runComparison } from '../../api/endpoints';
 import { EmptyDataIllustration, LoadingIllustration, ServerErrorIllustration } from '../../components/illustrations';
 import { ConvergenceCurveChart, PerformanceBarChart } from '../../components/charts';
-import type { ComparisonResult, AlgorithmConfig, ProblemDefinition } from '../../types';
+import type { ConvergenceCurveData, PerformanceData } from '../../components/charts';
+import type { ComparisonResult, AlgorithmConfig, ProblemDefinition, RobustBenchmarkType } from '../../types';
 import { toExponentialSafe, toFixedSafe, getLastElement } from '../../utils/arrayUtils';
 import { errorLogger } from '../../utils/errorLogger';
 
-import type { ConvergenceCurveData, PerformanceData } from '../../components/charts';
+const { Title, Text, Paragraph } = Typography;
 
-const { Title, Text } = Typography;
-
-export function ComparisonPage() {
+export function RobustComparisonPage() {
   const { selectedIds, toggleAlgorithm, selectAll, clearSelection } = useAlgorithmStore();
 
-  const [selectedBenchmark, setSelectedBenchmark] = useState('F1');
+  const [selectedBenchmark, setSelectedBenchmark] = useState('R1');
   const [populationSize, setPopulationSize] = useState(30);
   const [maxIterations, setMaxIterations] = useState(500);
   const [runs, setRuns] = useState(1);
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<ComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('table');
+  const [activeType, setActiveType] = useState<RobustBenchmarkType>('Biased');
+  const [activeResultTab, setActiveResultTab] = useState('table');
   const [logScale, setLogScale] = useState(true);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -71,15 +80,25 @@ export function ComparisonPage() {
     }, {} as Record<string, typeof ALGORITHMS>);
   }, []);
 
+  const robustFunctionsByType = useMemo(() => {
+    return ROBUST_BENCHMARK_FUNCTIONS.reduce((acc, func) => {
+      if (!acc[func.type]) {
+        acc[func.type] = [];
+      }
+      acc[func.type].push(func);
+      return acc;
+    }, {} as Record<RobustBenchmarkType, typeof ROBUST_BENCHMARK_FUNCTIONS>);
+  }, []);
+
   const handleRunComparison = async () => {
     if (selectedIds.length < 2) {
-      message.warning('请至少选择2个算法进行对比');
+      message.warning('Please select at least 2 algorithms for comparison');
       return;
     }
 
-    const benchmark = BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
+    const benchmark = ROBUST_BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
     if (!benchmark) {
-      message.error('未找到选中的基准函数');
+      message.error('Selected benchmark function not found');
       return;
     }
 
@@ -115,14 +134,14 @@ export function ComparisonPage() {
       }, abortControllerRef.current.signal);
 
       setResult(response);
-      message.success('算法对比完成！');
+      message.success('Robust benchmark comparison completed!');
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        console.log('[ComparisonPage] 请求已取消');
+        console.log('[RobustComparisonPage] Request cancelled');
         return;
       }
-      const errorMessage = err instanceof Error ? err.message : '优化执行失败，请检查后端服务是否正常运行';
-      errorLogger.error('算法对比失败', err);
+      const errorMessage = err instanceof Error ? err.message : 'Optimization failed, please check backend service';
+      errorLogger.error('Robust benchmark comparison failed', err);
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
@@ -133,7 +152,7 @@ export function ComparisonPage() {
 
   const columns = useMemo(() => [
     {
-      title: '算法',
+      title: 'Algorithm',
       dataIndex: 'algorithmId',
       key: 'algorithmId',
       render: (id: string) => (
@@ -152,34 +171,32 @@ export function ComparisonPage() {
       ),
     },
     {
-      title: '最优适应度',
+      title: 'Best Fitness',
       dataIndex: 'bestFitness',
       key: 'bestFitness',
       align: 'right' as const,
       render: (value: number) => toExponentialSafe(value, 6),
     },
     {
-      title: '执行时间(s)',
+      title: 'Time (s)',
       dataIndex: 'elapsedTime',
       key: 'elapsedTime',
       align: 'right' as const,
       render: (value: number) => toFixedSafe(value, 3),
     },
     {
-      title: '排名',
+      title: 'Rank',
       dataIndex: 'ranking',
       key: 'ranking',
       align: 'right' as const,
-      render: (ranking: number) => {
-        return (
-          <Badge
-            count={ranking}
-            style={{
-              backgroundColor: ranking === 1 ? '#faad14' : ranking === 2 ? '#8c8c8c' : '#d46b08'
-            }}
-          />
-        );
-      },
+      render: (ranking: number) => (
+        <Badge
+          count={ranking}
+          style={{
+            backgroundColor: ranking === 1 ? '#faad14' : ranking === 2 ? '#8c8c8c' : '#d46b08'
+          }}
+        />
+      ),
     },
   ], []);
 
@@ -199,7 +216,7 @@ export function ComparisonPage() {
   }, [result]);
 
   const selectedBenchmarkFunc = useMemo(() => {
-    return BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
+    return ROBUST_BENCHMARK_FUNCTIONS.find(f => f.id === selectedBenchmark);
   }, [selectedBenchmark]);
 
   const convergenceData = useMemo((): ConvergenceCurveData[] => {
@@ -222,11 +239,28 @@ export function ComparisonPage() {
     });
   }, [result]);
 
+  const typeTabs = useMemo(() => {
+    return (['Biased', 'Deceptive', 'Multimodal', 'Flat'] as RobustBenchmarkType[]).map(type => ({
+      key: type,
+      label: (
+        <Space>
+          <span>{ROBUST_TYPE_NAMES[type]}</span>
+          <Tag color="blue">{robustFunctionsByType[type]?.length || 0}</Tag>
+        </Space>
+      ),
+    }));
+  }, [robustFunctionsByType]);
+
   return (
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24 }}>
-        <Title level={2} style={{ marginBottom: 8 }}>单目标优化对比</Title>
-        <Text type="secondary">选择多个单目标优化算法进行性能对比分析（如需多目标优化对比，请使用"多目标对比"功能）</Text>
+        <Title level={2} style={{ marginBottom: 8 }}>
+          <ExperimentOutlined style={{ marginRight: 8 }} />
+          Robust Benchmark Comparison
+        </Title>
+        <Paragraph type="secondary">
+          Test algorithm robustness using benchmark functions with obstacles such as bias, deceptiveness, multimodality, and flat regions.
+        </Paragraph>
       </div>
 
       <Row gutter={[24, 24]}>
@@ -235,7 +269,7 @@ export function ComparisonPage() {
             <Card
               title={
                 <Space>
-                  <span>选择算法</span>
+                  <span>Select Algorithms</span>
                   <Tag color="blue">{selectedIds.length}/{ALGORITHMS.length}</Tag>
                 </Space>
               }
@@ -244,28 +278,16 @@ export function ComparisonPage() {
                   <Button
                     icon={<CheckOutlined />}
                     onClick={selectAll}
-                    className="algorithm-btn-enhanced"
-                    style={{
-                      height: 56,
-                      fontSize: 16,
-                      padding: '12px 24px',
-                      borderRadius: 8,
-                    }}
+                    style={{ height: 40, fontSize: 14 }}
                   >
-                    全选
+                    Select All
                   </Button>
                   <Button
                     icon={<CloseOutlined />}
                     onClick={clearSelection}
-                    className="algorithm-btn-enhanced"
-                    style={{
-                      height: 56,
-                      fontSize: 16,
-                      padding: '12px 24px',
-                      borderRadius: 8,
-                    }}
+                    style={{ height: 40, fontSize: 14 }}
                   >
-                    清空
+                    Clear
                   </Button>
                 </Space>
               }
@@ -281,17 +303,15 @@ export function ComparisonPage() {
                         <Tag
                           key={alg.id}
                           color={selectedIds.includes(alg.id) ? getAlgorithmColor(alg.id) : 'default'}
-                          className="algorithm-tag-enhanced"
                           style={{
-                            height: 48,
-                            fontSize: 16,
-                            padding: '10px 20px',
-                            margin: '8px',
-                            borderRadius: 8,
+                            height: 36,
+                            fontSize: 14,
+                            padding: '6px 12px',
+                            margin: '4px',
+                            borderRadius: 6,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            minWidth: 100,
                           }}
                           onClick={() => toggleAlgorithm(alg.id)}
                         >
@@ -304,11 +324,11 @@ export function ComparisonPage() {
               </Space>
             </Card>
 
-            <Card title="对比结果" extra={result && <Text type="secondary">基准函数: {result.functionName}</Text>}>
+            <Card title="Comparison Results" extra={result && <Text type="secondary">Function: {result.functionName}</Text>}>
               {error && (
                 <ServerErrorIllustration
                   size="sm"
-                  title="执行失败"
+                  title="Execution Failed"
                   description={error}
                 />
               )}
@@ -316,73 +336,56 @@ export function ComparisonPage() {
               {isRunning && (
                 <LoadingIllustration
                   size="lg"
-                  title="正在执行优化..."
-                  description="请稍候，这可能需要几秒到几分钟"
+                  title="Running Optimization..."
+                  description="Please wait, this may take a few seconds to minutes"
                 />
               )}
 
               {!isRunning && !result && !error && (
                 <EmptyDataIllustration
                   size="lg"
-                  title="选择算法后运行对比"
-                  description="请在上方选择至少2个算法，然后点击「运行对比」按钮"
+                  title="Select Algorithms and Run Comparison"
+                  description="Please select at least 2 algorithms above, then click the 'Run Comparison' button"
                 />
               )}
 
               {result && !isRunning && (
                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
                   <Tabs
-                    activeKey={activeTab}
-                    onChange={setActiveTab}
+                    activeKey={activeResultTab}
+                    onChange={setActiveResultTab}
                     items={[
                       {
                         key: 'table',
-                        label: <span><TableOutlined /> 结果表格</span>,
+                        label: <span><TableOutlined /> Results Table</span>,
                       },
                       {
                         key: 'convergence',
-                        label: <span><LineChartOutlined /> 收敛曲线</span>,
+                        label: <span><LineChartOutlined /> Convergence</span>,
                       },
                       {
                         key: 'performance',
-                        label: <span><BarChartOutlined /> 性能对比</span>,
+                        label: <span><BarChartOutlined /> Performance</span>,
                       },
                     ]}
                   />
 
-                  {activeTab === 'table' && (
-                    <Table
-                      columns={columns}
-                      dataSource={tableData}
-                      pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                        showTotal: (total) => `共 ${total} 条`,
-                        pageSizeOptions: ['5', '10', '20', '50'],
-                      }}
-                      scroll={{ y: 400 }}
-                      size="middle"
-                    />
-                  )}
-
-                  {activeTab === 'convergence' && (
+                  {activeResultTab === 'table' && (
                     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text type="secondary">收敛曲线对比展示各算法的优化过程</Text>
-                        <Space>
-                          <Text type="secondary">对数刻度:</Text>
-                          <Switch checked={logScale} onChange={setLogScale} size="small" />
-                        </Space>
-                      </div>
-                      <ConvergenceCurveChart
-                        curves={convergenceData}
-                        title="收敛曲线对比"
-                        height={450}
-                        showLegend
-                        logScale={logScale}
+                      <Table
+                        columns={columns}
+                        dataSource={tableData}
+                        pagination={{
+                          pageSize: 10,
+                          showSizeChanger: true,
+                          showQuickJumper: true,
+                          showTotal: (total) => `Total ${total} items`,
+                          pageSizeOptions: ['5', '10', '20', '50'],
+                        }}
+                        scroll={{ y: 400 }}
+                        size="middle"
                       />
-                      <Card size="small" title="收敛数据摘要">
+                      <Card size="small" title={<Space><LineChartOutlined /><span>Convergence Summary</span></Space>}>
                         <Row gutter={[8, 8]}>
                           {result.algorithms.map((algId) => {
                             const algResult = result.results[algId];
@@ -404,10 +407,10 @@ export function ComparisonPage() {
                                       <Text strong style={{ fontSize: 12 }}>{algId}</Text>
                                     </Space>
                                     <Text type="secondary" style={{ fontSize: 11 }}>
-                                      迭代: {convergence.length}
+                                      Iterations: {convergence.length}
                                     </Text>
                                     <Text type="secondary" style={{ fontSize: 11 }}>
-                                      最终: {toExponentialSafe(getLastElement(convergence), 4)}
+                                      Final: {toExponentialSafe(getLastElement(convergence), 4)}
                                     </Text>
                                   </Space>
                                 </Card>
@@ -419,19 +422,38 @@ export function ComparisonPage() {
                     </Space>
                   )}
 
-                  {activeTab === 'performance' && (
+                  {activeResultTab === 'convergence' && (
                     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <Text type="secondary">性能对比柱状图展示各算法的关键指标对比</Text>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text type="secondary">Convergence curves show the optimization process of each algorithm</Text>
+                        <Space>
+                          <Text type="secondary">Log Scale:</Text>
+                          <Switch checked={logScale} onChange={setLogScale} size="small" />
+                        </Space>
+                      </div>
+                      <ConvergenceCurveChart
+                        curves={convergenceData}
+                        title="Convergence Curve Comparison"
+                        height={450}
+                        showLegend
+                        logScale={logScale}
+                      />
+                    </Space>
+                  )}
+
+                  {activeResultTab === 'performance' && (
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <Text type="secondary">Performance comparison charts show key metrics across algorithms</Text>
                       <PerformanceBarChart
                         data={performanceData}
-                        title="最优适应度对比"
+                        title="Best Fitness Comparison"
                         metric="bestFitness"
                         height={350}
-                        showStdDev={false}
+                        showStdDev
                       />
                       <PerformanceBarChart
                         data={performanceData}
-                        title="执行时间对比"
+                        title="Execution Time Comparison"
                         metric="elapsedTime"
                         height={300}
                         showStdDev={false}
@@ -446,40 +468,73 @@ export function ComparisonPage() {
 
         <Col xs={24} lg={8}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Card title="基准函数">
-              <Select
-                value={selectedBenchmark}
-                onChange={setSelectedBenchmark}
-                style={{ width: '100%' }}
-                options={BENCHMARK_FUNCTIONS.map(func => ({
-                  label: `${func.id} - ${func.name}`,
-                  value: func.id,
-                }))}
+            <Card title="Robust Benchmark Functions">
+              <Tabs
+                activeKey={activeType}
+                onChange={(key) => {
+                  setActiveType(key as RobustBenchmarkType);
+                  const funcs = robustFunctionsByType[key as RobustBenchmarkType];
+                  if (funcs && funcs.length > 0) {
+                    setSelectedBenchmark(funcs[0].id);
+                  }
+                }}
+                items={typeTabs}
               />
-              {selectedBenchmarkFunc && (
-                <div style={{ marginTop: 16 }}>
-                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">类型</Text>
-                      <Text>{selectedBenchmarkFunc.type}</Text>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">维度</Text>
-                      <Text>{selectedBenchmarkFunc.dimension}</Text>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">最优值</Text>
-                      <Text>{selectedBenchmarkFunc.optimalValue}</Text>
-                    </div>
-                  </Space>
-                </div>
-              )}
+              <Divider style={{ margin: '12px 0' }} />
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                {robustFunctionsByType[activeType]?.map((func) => (
+                  <Card
+                    key={func.id}
+                    size="small"
+                    hoverable
+                    style={{
+                      backgroundColor: selectedBenchmark === func.id ? '#e6f4ff' : undefined,
+                      borderColor: selectedBenchmark === func.id ? '#1677ff' : undefined,
+                    }}
+                    onClick={() => setSelectedBenchmark(func.id)}
+                  >
+                    <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                      <Space>
+                        <Text strong>{func.id}</Text>
+                        <Text type="secondary">{func.name}</Text>
+                      </Space>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {func.description}
+                      </Text>
+                    </Space>
+                  </Card>
+                ))}
+              </Space>
             </Card>
 
-            <Card title="运行参数">
+            {selectedBenchmarkFunc && (
+              <Card title="Function Details" size="small">
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="ID">{selectedBenchmarkFunc.id}</Descriptions.Item>
+                  <Descriptions.Item label="Name">{selectedBenchmarkFunc.name}</Descriptions.Item>
+                  <Descriptions.Item label="Type">
+                    <Space>
+                      {ROBUST_TYPE_NAMES[selectedBenchmarkFunc.type]}
+                      <Tooltip title={ROBUST_TYPE_DESCRIPTIONS[selectedBenchmarkFunc.type]}>
+                        <InfoCircleOutlined style={{ color: '#1677ff' }} />
+                      </Tooltip>
+                    </Space>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Dimension">{selectedBenchmarkFunc.dimension}</Descriptions.Item>
+                  <Descriptions.Item label="Bounds">
+                    [{selectedBenchmarkFunc.lowerBound}, {selectedBenchmarkFunc.upperBound}]
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Delta (Tolerance)">
+                    {selectedBenchmarkFunc.delta}
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+            )}
+
+            <Card title="Run Parameters">
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                 <div>
-                  <Text type="secondary" style={{ marginBottom: 4, display: 'block' }}>种群大小</Text>
+                  <Text type="secondary" style={{ marginBottom: 4, display: 'block' }}>Population Size</Text>
                   <InputNumber
                     value={populationSize}
                     onChange={(v) => setPopulationSize(v || 30)}
@@ -489,7 +544,7 @@ export function ComparisonPage() {
                   />
                 </div>
                 <div>
-                  <Text type="secondary" style={{ marginBottom: 4, display: 'block' }}>最大迭代次数</Text>
+                  <Text type="secondary" style={{ marginBottom: 4, display: 'block' }}>Max Iterations</Text>
                   <InputNumber
                     value={maxIterations}
                     onChange={(v) => setMaxIterations(v || 500)}
@@ -499,7 +554,7 @@ export function ComparisonPage() {
                   />
                 </div>
                 <div>
-                  <Text type="secondary" style={{ marginBottom: 4, display: 'block' }}>独立运行次数</Text>
+                  <Text type="secondary" style={{ marginBottom: 4, display: 'block' }}>Independent Runs</Text>
                   <InputNumber
                     value={runs}
                     onChange={(v) => setRuns(v || 1)}
@@ -519,31 +574,17 @@ export function ComparisonPage() {
                 disabled={isRunning || selectedIds.length < 2}
                 loading={isRunning}
                 block
-                className="algorithm-btn-primary-enhanced"
-                style={{
-                  height: 72,
-                  fontSize: 18,
-                  padding: '16px 28px',
-                  borderRadius: 10,
-                }}
-                aria-busy={isRunning}
-                aria-label={isRunning ? '运行对比中' : '开始运行对比'}
+                style={{ height: 56, fontSize: 16 }}
               >
-                {isRunning ? '运行中...' : '运行对比'}
+                {isRunning ? 'Running...' : 'Run Comparison'}
               </Button>
               <Button
                 block
                 icon={<DownloadOutlined />}
                 disabled
-                className="algorithm-btn-enhanced"
-                style={{
-                  height: 72,
-                  fontSize: 18,
-                  padding: '16px 28px',
-                  borderRadius: 10,
-                }}
+                style={{ height: 56, fontSize: 16 }}
               >
-                导出结果
+                Export Results
               </Button>
             </Space>
           </Space>

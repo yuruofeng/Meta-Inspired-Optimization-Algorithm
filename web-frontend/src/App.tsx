@@ -13,6 +13,7 @@ const HistoryPage = lazy(() => import('./pages/History').then(m => ({ default: m
 const SettingsPage = lazy(() => import('./pages/Settings').then(m => ({ default: m.SettingsPage })));
 
 const MOComparisonPage = lazy(() => import('./pages/MOComparison/MOComparisonPage').then(m => ({ default: m.MOComparisonPage })));
+const RobustComparisonPage = lazy(() => import('./pages/RobustComparison/RobustComparisonPage').then(m => ({ default: m.RobustComparisonPage })));
 
 function PageLoader() {
   return (
@@ -49,6 +50,8 @@ function App() {
         return <ComparisonPage />;
       case 'moComparison':
         return <MOComparisonPage />;
+      case 'robustComparison':
+        return <RobustComparisonPage />;
       case 'optimize':
         return <OptimizePage />;
       case 'history':

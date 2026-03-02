@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type PageName = 'home' | 'comparison' | 'moComparison' | 'optimize' | 'history' | 'settings';
+export type PageName = 'home' | 'comparison' | 'moComparison' | 'robustComparison' | 'optimize' | 'history' | 'settings';
 
 interface UIState {
   sidebarCollapsed: boolean;

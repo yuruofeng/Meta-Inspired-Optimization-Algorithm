@@ -9,6 +9,7 @@ import {
   SunOutlined,
   MoonOutlined,
   ApartmentOutlined,
+  ExperimentOutlined,
 } from '@ant-design/icons';
 import { useUIStore, type PageName } from '../../../stores';
 
@@ -31,6 +32,11 @@ const menuItems: MenuItem[] = [
     key: 'moComparison',
     icon: <ApartmentOutlined />,
     label: '多目标对比',
+  },
+  {
+    key: 'robustComparison',
+    icon: <ExperimentOutlined />,
+    label: '鲁棒性测试',
   },
   {
     key: 'optimize',

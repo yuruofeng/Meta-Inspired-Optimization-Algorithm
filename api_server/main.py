@@ -21,6 +21,7 @@ from models import (
     TaskProgress,
     Algorithm,
     BenchmarkFunction,
+    RobustBenchmarkFunction,
     BatchTaskResponse,
     CancelTaskResponse,
     ApiError,
@@ -123,6 +124,48 @@ async def get_benchmark(benchmark_id: str):
         if bm.get("id") == benchmark_id:
             return bm
     raise HTTPException(status_code=404, detail=f"基准函数 {benchmark_id} 不存在")
+
+
+# ==================== 鲁棒基准函数API ====================
+
+ROBUST_BENCHMARK_FUNCTIONS = [
+    {"id": "R1", "name": "TP_Biased1", "type": "Biased", "dimension": 2, "lowerBound": -100, "upperBound": 100, "delta": 1, "description": "偏置测试问题1 - 搜索空间存在偏置，最优解不在中心"},
+    {"id": "R2", "name": "TP_Biased2", "type": "Biased", "dimension": 2, "lowerBound": -100, "upperBound": 100, "delta": 1, "description": "偏置测试问题2 - 多个偏置区域，增加搜索难度"},
+    {"id": "R3", "name": "TP_Deceptive1", "type": "Deceptive", "dimension": 2, "lowerBound": 0, "upperBound": 1, "delta": 0.01, "description": "欺骗测试问题1 - 多个局部最优陷阱，容易误导算法"},
+    {"id": "R4", "name": "TP_Deceptive2", "type": "Deceptive", "dimension": 2, "lowerBound": 0, "upperBound": 1, "delta": 0.01, "description": "欺骗测试问题2 - 密集的局部最优分布"},
+    {"id": "R5", "name": "TP_Deceptive3", "type": "Deceptive", "dimension": 2, "lowerBound": 0, "upperBound": 2, "delta": 0.01, "description": "欺骗测试问题3 - 四个象限有不同的欺骗结构"},
+    {"id": "R6", "name": "TP_Multimodal1", "type": "Multimodal", "dimension": 2, "lowerBound": 0, "upperBound": 1, "delta": 0.01, "description": "多模态测试问题1 - 大量局部最优，测试全局搜索能力"},
+    {"id": "R7", "name": "TP_Multimodal2", "type": "Multimodal", "dimension": 2, "lowerBound": 0, "upperBound": 1, "delta": 0.01, "description": "多模态测试问题2 - 对称的多模态结构"},
+    {"id": "R8", "name": "TP_Flat", "type": "Flat", "dimension": 2, "lowerBound": 0, "upperBound": 1, "delta": 0.01, "description": "平坦区域测试问题 - 大面积平坦区域，梯度信息稀少"},
+]
+
+ROBUST_TYPE_NAMES = {
+    "Biased": "偏置函数",
+    "Deceptive": "欺骗函数",
+    "Multimodal": "多模态函数",
+    "Flat": "平坦函数",
+}
+
+
+@app.get("/api/v1/robust-benchmarks", response_model=list[RobustBenchmarkFunction], tags=["鲁棒基准函数"])
+async def get_robust_benchmarks():
+    """获取所有鲁棒基准测试函数"""
+    return ROBUST_BENCHMARK_FUNCTIONS
+
+
+@app.get("/api/v1/robust-benchmarks/types", tags=["鲁棒基准函数"])
+async def get_robust_benchmark_types():
+    """获取鲁棒基准函数类型列表"""
+    return [{"id": k, "name": v} for k, v in ROBUST_TYPE_NAMES.items()]
+
+
+@app.get("/api/v1/robust-benchmarks/{benchmark_id}", response_model=RobustBenchmarkFunction, tags=["鲁棒基准函数"])
+async def get_robust_benchmark(benchmark_id: str):
+    """获取单个鲁棒基准函数定义"""
+    for bm in ROBUST_BENCHMARK_FUNCTIONS:
+        if bm.get("id") == benchmark_id:
+            return bm
+    raise HTTPException(status_code=404, detail=f"鲁棒基准函数 {benchmark_id} 不存在")
 
 
 # ==================== 优化执行API ====================

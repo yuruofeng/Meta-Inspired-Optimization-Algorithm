@@ -90,6 +90,18 @@ class BenchmarkFunction(BaseModel):
     description: Optional[str] = None
 
 
+class RobustBenchmarkFunction(BaseModel):
+    """鲁棒基准测试函数"""
+    id: str
+    name: str
+    type: Literal["Biased", "Deceptive", "Multimodal", "Flat"]
+    dimension: int
+    lowerBound: float
+    upperBound: float
+    delta: float
+    description: Optional[str] = None
+
+
 # ==================== 请求/响应模型 ====================
 
 class ProblemDefinition(BaseModel):
