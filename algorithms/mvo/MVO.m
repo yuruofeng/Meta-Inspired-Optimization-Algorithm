@@ -203,7 +203,7 @@ classdef MVO < BaseAlgorithm
                         r3 = rand();
                         if r3 < 0.5
                             % 向最优宇宙的正方向移动
-                            if length(lb) == 1
+                            if isscalar(lb)
                                 % 标量边界
                                 obj.universePositions(i, j) = obj.bestUniverse(j) + ...
                                     TDR * ((ub - lb) * rand + lb);
@@ -214,7 +214,7 @@ classdef MVO < BaseAlgorithm
                             end
                         else
                             % 向最优宇宙的负方向移动
-                            if length(lb) == 1
+                            if isscalar(lb)
                                 % 标量边界
                                 obj.universePositions(i, j) = obj.bestUniverse(j) - ...
                                     TDR * ((ub - lb) * rand + lb);

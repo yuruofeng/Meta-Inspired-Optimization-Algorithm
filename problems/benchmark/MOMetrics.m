@@ -320,14 +320,15 @@ classdef MOMetrics < handle
             spacing = sqrt(sum((d - dMean).^2) / (n - 1));
         end
 
-        function delta = Spread(pf, ~)
+        function delta = Spread(pf, truePF)
             % Spread (Delta) 扩展度指标
             %
             % Delta值越小越好
+            % Note: truePF parameter is reserved for future use
 
             arguments
                 pf (:,:) double
-                ~ (:,:) double
+                truePF (:,:) double
             end
 
             n = size(pf, 1);

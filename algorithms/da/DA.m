@@ -221,8 +221,8 @@ classdef DA < BaseAlgorithm
             % 更新每个蜻蜓
             for i = 1:N
                 % 找邻居
-                neighbors = [];
-                neighborSteps = [];
+                neighbors = zeros(N, dim);
+                neighborSteps = zeros(N, dim);
                 for j = 1:N
                     dist = abs(obj.positions(i, :) - obj.positions(j, :));
                     if all(dist <= obj.neighborhoodRadius) && j ~= i
