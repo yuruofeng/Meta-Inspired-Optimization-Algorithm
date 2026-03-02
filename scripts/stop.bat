@@ -1,22 +1,25 @@
 @echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
 echo.
 echo ========================================================
-echo         元启发式优化算法平台 v2.0
-echo         停止所有服务
+echo         Metaheuristic Optimization Platform
+echo         Stop Services Script
 echo ========================================================
 echo.
 
-echo [停止] 正在停止后端API服务...
-taskkill /f /fi "WINDOWTITLE eq Metaheuristic API Server*" >nul 2>&1
-taskkill /f /im python.exe /fi "WINDOWTITLE eq *main.py*" >nul 2>&1
+echo [Stop] Stopping backend API server...
+taskkill /f /im python.exe /fi "WINDOWTITLE eq *Metaheuristic API*" >nul 2>&1
+taskkill /f /im python.exe /fi "WINDOWTITLE eq *uvicorn*" >nul 2>&1
 
-echo [停止] 正在停止前端开发服务...
-taskkill /f /fi "WINDOWTITLE eq Metaheuristic Frontend*" >nul 2>&1
+echo [Stop] Stopping frontend dev server...
+taskkill /f /im node.exe /fi "WINDOWTITLE eq *Metaheuristic Frontend*" >nul 2>&1
 taskkill /f /im node.exe /fi "WINDOWTITLE eq *vite*" >nul 2>&1
 
 echo.
 echo ========================================================
-echo                    服务已停止
+echo                    Services Stopped
 echo ========================================================
 echo.
 
