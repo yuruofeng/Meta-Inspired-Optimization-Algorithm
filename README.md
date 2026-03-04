@@ -1,7 +1,7 @@
 # 🧠 元启发式优化算法平台
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.4.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-2.5.0-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/MATLAB-R2024a-orange.svg" alt="MATLAB">
   <img src="https://img.shields.io/badge/Python-3.10+-green.svg" alt="Python">
   <img src="https://img.shields.io/badge/React-19-61DAFB.svg" alt="React">
@@ -88,27 +88,52 @@
 │   ├── MOOptimizationResult.m     # 多目标优化结果结构
 │   └── AlgorithmRegistry.m        # 算法注册表
 │
-├── algorithms/                    # 算法实现 (25个)
+├── algorithms/                    # 算法实现 (40个)
+│   │
+│   │   # 群智能算法
 │   ├── alo/                       # 蚁狮优化器
 │   ├── gwo/                       # 灰狼优化器
-│   ├── igwo/                      # 改进灰狼优化器
 │   ├── woa/                       # 鲸鱼优化算法
 │   ├── ewoa/                      # 增强鲸鱼优化算法
 │   ├── da/                        # 蜻蜓算法
 │   ├── bda/                       # 二进制蜻蜓算法
 │   ├── bba/                       # 二进制蝙蝠算法
+│   ├── mfo/                       # 飞蛾火焰优化
+│   ├── mvo/                       # 多元宇宙优化器
+│   ├── ssa/                       # 樽海鞘群算法
+│   ├── goa/                       # 蚱蜢优化算法
+│   ├── pso/                       # 粒子群优化算法
+│   ├── hho/                       # 哈里斯鹰优化算法
+│   ├── abc/                       # 人工蜂群算法
+│   ├── fa/                        # 萤火虫算法
+│   ├── sma/                       # 黏菌算法
+│   ├── cs/                        # 布谷鸟搜索算法
+│   ├── aco/                       # 蚁群优化算法
+│   ├── cpo/                       # 豪猪优化算法
+│   ├── bwo/                       # 白鲸优化算法
+│   ├── ho/                        # 蜜獾优化算法
+│   ├── dbo/                       # 蜣螂优化算法
+│   │
+│   │   # 进化算法
 │   ├── ga/                        # 遗传算法
+│   ├── de/                        # 差分进化算法
+│   ├── tlbo/                      # 教与学优化算法
+│   │
+│   │   # 物理算法
 │   ├── sa/                        # 模拟退火
+│   ├── aso/                       # 原子搜索优化算法
+│   │
+│   │   # 改进与混合算法
+│   ├── igwo/                      # 改进灰狼优化器
 │   ├── vpso/                      # 变速度粒子群
 │   ├── vppso/                     # 变参数粒子群
 │   ├── woa-sa/                    # 鲸鱼-模拟退火混合
-│   ├── mfo/                       # 飞蛾火焰优化
-│   ├── mvo/                       # 多元宇宙优化器
 │   ├── sca/                       # 正弦余弦算法
-│   ├── ssa/                       # 樽海鞘群算法
-│   ├── goa/                       # 蚱蜢优化算法
 │   ├── psogsa/                    # 混合PSO-GSA算法
 │   ├── hlbda/                     # 超学习二进制蜻蜓算法
+│   ├── nrbo/                      # 牛顿-拉夫森优化算法
+│   │
+│   │   # 多目标优化算法
 │   └── mo/                        # 多目标优化算法
 │       ├── MOALO.m                # 多目标蚁狮优化器
 │       ├── MODA.m                 # 多目标蜻蜓算法
@@ -188,32 +213,60 @@
 
 ## 🧮 已实现算法
 
-本项目共实现 **25** 种元启发式优化算法：
+本项目共实现 **40** 种元启发式优化算法：
 
-### 🎯 单目标优化算法 (20个)
+### 🎯 单目标优化算法 (35个)
 
-| 算法 | 全称 | 类别 | 参考文献 |
-|------|------|------|----------|
-| ALO | Ant Lion Optimizer | 群智能 | Mirjalili, 2015 |
-| GWO | Grey Wolf Optimizer | 群智能 | Mirjalili, 2014 |
-| IGWO | Improved GWO | 混合 | Nadimi-Shahraki, 2021 |
-| WOA | Whale Optimization Algorithm | 群智能 | Mirjalili, 2016 |
-| EWOA | Enhanced WOA | 混合 | Nadimi-Shahraki, 2022 |
-| DA | Dragonfly Algorithm | 群智能 | Mirjalili, 2016 |
-| BDA | Binary Dragonfly Algorithm | 群智能 | Mirjalili, 2016 |
-| BBA | Binary Bat Algorithm | 群智能 | Mirjalili, 2014 |
-| GA | Genetic Algorithm | 进化 | Holland, 1975 |
-| SA | Simulated Annealing | 物理 | Kirkpatrick, 1983 |
-| VPSO | Variable Velocity PSO | 群智能 | - |
-| VPPSO | Variable Parameter PSO | 群智能 | - |
-| WOASA | WOA-SA Hybrid | 混合 | - |
-| MFO | Moth-Flame Optimization | 群智能 | Mirjalili, 2015 |
-| MVO | Multi-Verse Optimizer | 群智能 | Mirjalili, 2016 |
-| SCA | Sine Cosine Algorithm | 群智能 | Mirjalili, 2016 |
-| SSA | Salp Swarm Algorithm | 群智能 | Mirjalili, 2017 |
-| GOA | Grasshopper Optimization Algorithm | 群智能 | Saremi, 2017 |
-| PSOGSA | Hybrid PSO-GSA Algorithm | 混合 | Mirjalili, 2010 |
-| HLBDA | Hyper Learning Binary Dragonfly Algorithm | 群智能 | 2024 |
+#### 群智能算法
+| 算法 | 全称 | 参考文献 |
+|------|------|----------|
+| ALO | Ant Lion Optimizer (蚁狮优化器) | Mirjalili, 2015 |
+| GWO | Grey Wolf Optimizer (灰狼优化器) | Mirjalili, 2014 |
+| WOA | Whale Optimization Algorithm (鲸鱼优化算法) | Mirjalili, 2016 |
+| DA | Dragonfly Algorithm (蜻蜓算法) | Mirjalili, 2016 |
+| BDA | Binary Dragonfly Algorithm (二进制蜻蜓算法) | Mirjalili, 2016 |
+| BBA | Binary Bat Algorithm (二进制蝙蝠算法) | Mirjalili, 2014 |
+| MFO | Moth-Flame Optimization (飞蛾火焰优化) | Mirjalili, 2015 |
+| MVO | Multi-Verse Optimizer (多元宇宙优化器) | Mirjalili, 2016 |
+| SSA | Salp Swarm Algorithm (樽海鞘群算法) | Mirjalili, 2017 |
+| GOA | Grasshopper Optimization Algorithm (蚱蜢优化算法) | Saremi, 2017 |
+| PSO | Particle Swarm Optimization (粒子群优化算法) | Kennedy & Eberhart, 1995 |
+| HHO | Harris Hawks Optimization (哈里斯鹰优化算法) | Heidari, 2019 |
+| ABC | Artificial Bee Colony (人工蜂群算法) | Karaboga, 2005 |
+| FA | Firefly Algorithm (萤火虫算法) | Yang, 2009 |
+| SMA | Slime Mould Algorithm (黏菌算法) | Li & Chen, 2020 |
+| CS | Cuckoo Search (布谷鸟搜索算法) | Yang & Deb, 2009 |
+| ACO | Ant Colony Optimization (蚁群优化算法) | Dorigo, 1996 |
+| CPO | Crested Porcupine Optimizer (豪猪优化算法) | Houssein, 2024 |
+| BWO | Beluga Whale Optimization (白鲸优化算法) | Zhong, 2022 |
+| HO | Honey Badger Optimizer (蜜獾优化算法) | Hashim, 2022 |
+| DBO | Dung Beetle Optimizer (蜣螂优化算法) | Xue & Shen, 2022 |
+
+#### 进化算法
+| 算法 | 全称 | 参考文献 |
+|------|------|----------|
+| GA | Genetic Algorithm (遗传算法) | Holland, 1975 |
+| DE | Differential Evolution (差分进化算法) | Storn & Price, 1997 |
+| TLBO | Teaching-Learning-Based Optimization (教与学优化算法) | Rao, 2011 |
+
+#### 物理算法
+| 算法 | 全称 | 参考文献 |
+|------|------|----------|
+| SA | Simulated Annealing (模拟退火) | Kirkpatrick, 1983 |
+| ASO | Atom Search Optimization (原子搜索优化算法) | Zhao, 2019 |
+
+#### 改进与混合算法
+| 算法 | 全称 | 参考文献 |
+|------|------|----------|
+| IGWO | Improved GWO (改进灰狼优化器) | Nadimi-Shahraki, 2021 |
+| EWOA | Enhanced WOA (增强鲸鱼优化算法) | Nadimi-Shahraki, 2022 |
+| VPSO | Variable Velocity PSO (变速度粒子群) | - |
+| VPPSO | Variable Parameter PSO (变参数粒子群) | - |
+| WOASA | WOA-SA Hybrid (鲸鱼-模拟退火混合) | - |
+| SCA | Sine Cosine Algorithm (正弦余弦算法) | Mirjalili, 2016 |
+| PSOGSA | Hybrid PSO-GSA Algorithm (混合PSO-GSA) | Mirjalili, 2010 |
+| HLBDA | Hyper Learning Binary Dragonfly Algorithm (超学习二进制蜻蜓) | 2024 |
+| NRBO | Newton-Raphson-Based Optimizer (牛顿-拉夫森优化算法) | Xue & Shen, 2023 |
 
 ### 🎯 多目标优化算法 (5个)
 
