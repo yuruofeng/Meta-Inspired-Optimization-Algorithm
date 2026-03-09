@@ -9,7 +9,16 @@
 </p>
 
 <p align="center">
-  <strong>作者</strong>: RUOFENG YU  |  <strong>发布日期</strong>: 2026年3月
+  <a href="https://github.com/yuruofeng/metaheuristic-optimization-algorithm">
+    <img src="https://img.shields.io/badge/GitHub-Repository-black.svg" alt="GitHub Repository">
+  </a>
+  <a href="https://github.com/yuruofeng/metaheuristic-optimization-algorithm/issues">
+    <img src="https://img.shields.io/badge/Issues-Welcome-brightgreen.svg" alt="Issues">
+  </a>
+</p>
+
+<p align="center">
+  <strong>作者</strong>: RUOFENG YU  |  <strong>发布日期</strong>: 2026年3月
 </p>
 
 ---

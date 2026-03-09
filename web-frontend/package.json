@@ -1,7 +1,18 @@
 {
-  "name": "web-frontend",
+  "name": "metaheuristic-optimization-algorithm-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.5.0",
+  "description": "元启发式优化算法平台前端 - Metaheuristic Optimization Algorithm Platform Frontend",
+  "author": "RUOFENG YU",
+  "license": "BSD-2-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuruofeng/metaheuristic-optimization-algorithm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yuruofeng/metaheuristic-optimization-algorithm/issues"
+  },
+  "homepage": "https://github.com/yuruofeng/metaheuristic-optimization-algorithm#readme",
   "type": "module",
   "scripts": {
     "dev": "vite",
