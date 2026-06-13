@@ -26,7 +26,11 @@ def test_catalog_routes_return_schema_compatible_items():
     benchmarks = client.get("/api/v1/benchmarks")
 
     assert algorithms.status_code == 200
-    assert algorithms.json()[0]["paramSchema"]["populationSize"]["type"] == "integer"
+    algorithm_payload = algorithms.json()
+    algorithm_ids = {algorithm["id"] for algorithm in algorithm_payload}
+    assert len(algorithm_payload) == 34
+    assert {"GWO", "GA", "MOEAD", "NSGAIII", "WOASA"} <= algorithm_ids
+    assert algorithm_payload[0]["paramSchema"]["populationSize"]["type"] == "integer"
     assert benchmarks.status_code == 200
     assert "lowerBound" in benchmarks.json()[0]
 

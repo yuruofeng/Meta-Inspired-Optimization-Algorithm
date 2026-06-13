@@ -11,6 +11,8 @@ from typing import Dict, Any, Optional, Callable
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
+from app.services.algorithm_catalog import build_simulated_algorithms
+
 # MATLAB引擎导入（可选，在无MATLAB环境时使用模拟模式）
 try:
     import matlab.engine
@@ -229,44 +231,7 @@ class MatlabBridge:
 
     def _get_simulated_algorithms(self) -> list:
         """获取模拟的算法列表"""
-        return [
-            {
-                "id": "GWO",
-                "name": "GWO",
-                "fullName": "Grey Wolf Optimizer",
-                "version": "2.0.0",
-                "description": "灰狼优化器模拟灰狼群体的领导层级和狩猎行为",
-                "category": "swarm",
-                "paramSchema": self._default_param_schema(),
-            },
-            {
-                "id": "ALO",
-                "name": "ALO",
-                "fullName": "Ant Lion Optimizer",
-                "version": "2.0.0",
-                "description": "蚁狮优化器模拟蚁狮幼虫捕食蚂蚁的行为",
-                "category": "swarm",
-                "paramSchema": self._default_param_schema(),
-            },
-            {
-                "id": "WOA",
-                "name": "WOA",
-                "fullName": "Whale Optimization Algorithm",
-                "version": "2.0.0",
-                "description": "鲸鱼优化算法模拟座头鲸的气泡网捕食策略",
-                "category": "swarm",
-                "paramSchema": self._default_param_schema(),
-            },
-            {
-                "id": "IGWO",
-                "name": "IGWO",
-                "fullName": "Improved Grey Wolf Optimizer",
-                "version": "2.0.0",
-                "description": "改进灰狼优化器引入距离学习启发式搜索机制",
-                "category": "hybrid",
-                "paramSchema": self._default_param_schema(),
-            },
-        ]
+        return build_simulated_algorithms(self._default_param_schema())
 
     def _default_param_schema(self) -> Dict[str, Any]:
         return {
