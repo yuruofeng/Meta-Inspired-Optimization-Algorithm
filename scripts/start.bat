@@ -44,7 +44,7 @@ echo ========================================================
 
 echo.
 echo [1/4] Checking Python dependencies...
-cd /d "%PROJECT_ROOT%\api_server"
+cd /d "%PROJECT_ROOT%\backend"
 if exist "requirements.txt" (
     python -c "import fastapi" 2>nul
     if errorlevel 1 (
@@ -64,7 +64,7 @@ if exist "requirements.txt" (
 
 echo.
 echo [2/4] Checking Node.js dependencies...
-cd /d "%PROJECT_ROOT%\web-frontend"
+cd /d "%PROJECT_ROOT%\frontend"
 if exist "package.json" (
     if not exist "node_modules" (
         echo [Install] Installing npm packages...
@@ -88,8 +88,8 @@ echo ========================================================
 
 echo.
 echo [3/4] Starting API server (port 8000)...
-cd /d "%PROJECT_ROOT%\api_server"
-start "Metaheuristic API Server" cmd /k "chcp 65001 >nul && python main.py"
+cd /d "%PROJECT_ROOT%\backend"
+start "Metaheuristic API Server" cmd /k "chcp 65001 >nul && python -m app.main"
 if errorlevel 1 (
     echo [Error] Failed to start API server
     pause
@@ -102,7 +102,7 @@ timeout /t 3 /nobreak >nul
 
 echo.
 echo [4/4] Starting frontend dev server (port 5173)...
-cd /d "%PROJECT_ROOT%\web-frontend"
+cd /d "%PROJECT_ROOT%\frontend"
 start "Metaheuristic Frontend" cmd /k "chcp 65001 >nul && npm run dev"
 if errorlevel 1 (
     echo [Error] Failed to start frontend server

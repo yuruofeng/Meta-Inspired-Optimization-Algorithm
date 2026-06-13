@@ -16,8 +16,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Build
-web-frontend/dist/
-web-frontend/.vite/
+frontend/dist/
+frontend/.vite/
 *.local
 
 # IDE
@@ -47,8 +47,8 @@ logs/
 .env.*.local
 
 # Test results (keep directory structure)
-tests/benchmark/results/*.mat
-tests/benchmark/results/*.json
+matlab/tests/benchmark/results/*.mat
+matlab/tests/benchmark/results/*.json
 
 # Claude plans (optional)
 .claude/
