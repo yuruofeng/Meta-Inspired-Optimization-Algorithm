@@ -28,8 +28,22 @@ def test_catalog_routes_return_schema_compatible_items():
     assert algorithms.status_code == 200
     algorithm_payload = algorithms.json()
     algorithm_ids = {algorithm["id"] for algorithm in algorithm_payload}
-    assert len(algorithm_payload) == 34
-    assert {"GWO", "GA", "MOEAD", "NSGAIII", "WOASA"} <= algorithm_ids
+    assert len(algorithm_payload) == 54
+    assert {
+        "GWO",
+        "GA",
+        "MOEAD",
+        "NSGAIII",
+        "WOASA",
+        "PSO",
+        "ACO",
+        "TLBO",
+        "JAYA",
+        "BA",
+        "FPA",
+        "HS",
+        "BFO",
+    } <= algorithm_ids
     assert algorithm_payload[0]["paramSchema"]["populationSize"]["type"] == "integer"
     assert benchmarks.status_code == 200
     assert "lowerBound" in benchmarks.json()[0]

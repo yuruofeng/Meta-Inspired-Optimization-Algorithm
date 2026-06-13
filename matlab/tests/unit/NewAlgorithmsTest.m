@@ -147,12 +147,30 @@ classdef NewAlgorithmsTest < matlab.unittest.TestCase
             obj.verifyTrue(result.bestFitness >= 0, 'HO: bestFitness should be non-negative');
             obj.verifyEqual(length(result.convergenceCurve), obj.TestConfig.maxIterations);
         end
+
+        function testACO(obj)
+            aco = ACO(obj.TestConfig);
+            result = aco.run(obj.TestProblem);
+
+            obj.verifyTrue(isfinite(result.bestFitness), 'ACO: bestFitness should be finite');
+            obj.verifyTrue(result.bestFitness >= 0, 'ACO: bestFitness should be non-negative');
+            obj.verifyEqual(length(result.convergenceCurve), obj.TestConfig.maxIterations);
+        end
+
+        function testTLBO(obj)
+            tlbo = TLBO(obj.TestConfig);
+            result = tlbo.run(obj.TestProblem);
+
+            obj.verifyTrue(isfinite(result.bestFitness), 'TLBO: bestFitness should be finite');
+            obj.verifyTrue(result.bestFitness >= 0, 'TLBO: bestFitness should be non-negative');
+            obj.verifyEqual(length(result.convergenceCurve), obj.TestConfig.maxIterations);
+        end
     end
 
     methods (Test)
         function testAlgorithmInterface(obj)
-            algorithms = {@PSO, @DE, @HHO, @ABC, @CS, @FA, @DBO, @SMA, @BWO, @ASO, @NRBO, @CPO, @HO};
-            names = {'PSO', 'DE', 'HHO', 'ABC', 'CS', 'FA', 'DBO', 'SMA', 'BWO', 'ASO', 'NRBO', 'CPO', 'HO'};
+            algorithms = {@PSO, @DE, @HHO, @ABC, @CS, @FA, @DBO, @SMA, @BWO, @ASO, @NRBO, @CPO, @HO, @ACO, @TLBO};
+            names = {'PSO', 'DE', 'HHO', 'ABC', 'CS', 'FA', 'DBO', 'SMA', 'BWO', 'ASO', 'NRBO', 'CPO', 'HO', 'ACO', 'TLBO'};
             
             for i = 1:length(algorithms)
                 alg = algorithms{i}(obj.TestConfig);
@@ -178,8 +196,8 @@ classdef NewAlgorithmsTest < matlab.unittest.TestCase
         end
 
         function testParameterSchema(obj)
-            algorithms = {@PSO, @DE, @HHO, @ABC, @CS, @FA, @DBO, @SMA, @BWO, @ASO, @NRBO, @CPO, @HO};
-            names = {'PSO', 'DE', 'HHO', 'ABC', 'CS', 'FA', 'DBO', 'SMA', 'BWO', 'ASO', 'NRBO', 'CPO', 'HO'};
+            algorithms = {@PSO, @DE, @HHO, @ABC, @CS, @FA, @DBO, @SMA, @BWO, @ASO, @NRBO, @CPO, @HO, @ACO, @TLBO};
+            names = {'PSO', 'DE', 'HHO', 'ABC', 'CS', 'FA', 'DBO', 'SMA', 'BWO', 'ASO', 'NRBO', 'CPO', 'HO', 'ACO', 'TLBO'};
             
             for i = 1:length(algorithms)
                 alg = algorithms{i}();

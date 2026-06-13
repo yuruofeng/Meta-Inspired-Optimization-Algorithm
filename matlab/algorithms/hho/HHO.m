@@ -115,7 +115,7 @@ classdef HHO < BaseAlgorithm
             dim = obj.problem.dim;
             N = obj.config.populationSize;
             MaxIter = obj.config.maxIterations;
-            t = obj.currentIteration + 1;
+            t = double(obj.currentIteration) + 1;
 
             for i = 1:N
                 obj.positions(i, :) = obj.clampToBounds(obj.positions(i, :), lb, ub);
@@ -160,11 +160,11 @@ classdef HHO < BaseAlgorithm
             % 输出参数:
             %   tf - true表示停止，false表示继续
 
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function newPos = explorationPhase(obj, i, N, dim, lb, ub)
             % explorationPhase 探索阶段
             %

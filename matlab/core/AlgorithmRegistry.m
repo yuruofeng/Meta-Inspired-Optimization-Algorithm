@@ -193,6 +193,7 @@ classdef AlgorithmRegistry < handle
             metadata = AlgorithmRegistry.ensureField(metadata, 'version', version);
             metadata = AlgorithmRegistry.ensureField(metadata, 'description', sprintf('%s optimization algorithm', name));
             metadata = AlgorithmRegistry.ensureField(metadata, 'category', AlgorithmRegistry.inferCategory(name));
+            metadata = AlgorithmRegistry.ensureField(metadata, 'reference', struct());
             metadata = AlgorithmRegistry.ensureField(metadata, 'paramSchema', AlgorithmRegistry.readParamSchema(constructor));
             metadata.paramSchema = AlgorithmRegistry.normalizeParamSchema(metadata.paramSchema);
         end

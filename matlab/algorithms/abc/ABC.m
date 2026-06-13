@@ -39,7 +39,6 @@ classdef ABC < BaseAlgorithm
         trial               % 搜索失败计数器 (N x 1)
         prob                % 选择概率 (N x 1)
         bestFood            % 最优蜜源位置 (1 x Dim)
-        bestFitness         % 最优蜜源适应度
     end
 
     properties (Constant)
@@ -141,11 +140,11 @@ classdef ABC < BaseAlgorithm
             % 输出参数:
             %   tf - true表示停止，false表示继续
 
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function employedBeePhase(obj, N, dim, lb, ub)
             % employedBeePhase 雇佣蜂阶段
             %

@@ -35,7 +35,6 @@ classdef NRBO < BaseAlgorithm
         positions            % 种群位置矩阵 (N x Dim)
         fitness              % 适应度向量 (N x 1)
         bestPosition         % 最优位置 (1 x Dim)
-        bestFitness          % 最优适应度
     end
 
     properties (Constant)
@@ -87,11 +86,11 @@ classdef NRBO < BaseAlgorithm
 
         function iterate(obj)
             lb = obj.problem.lb;
-            ub = problem.ub;
+            ub = obj.problem.ub;
             dim = obj.problem.dim;
             N = obj.config.populationSize;
             MaxIter = obj.config.maxIterations;
-            t = obj.currentIteration + 1;
+            t = double(obj.currentIteration) + 1;
 
             delta = 1 - t / MaxIter;
 
@@ -142,11 +141,11 @@ classdef NRBO < BaseAlgorithm
         end
 
         function tf = shouldStop(obj)
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function validatedConfig = validateConfig(obj, configStruct)
             validatedConfig = struct();
             

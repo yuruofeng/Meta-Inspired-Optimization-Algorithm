@@ -35,7 +35,6 @@ classdef CPO < BaseAlgorithm
         positions            % 种群位置矩阵 (N x Dim)
         fitness              % 适应度向量 (N x 1)
         bestPosition         % 最优位置 (1 x Dim)
-        bestFitness          % 最优适应度
     end
 
     properties (Constant)
@@ -87,11 +86,11 @@ classdef CPO < BaseAlgorithm
 
         function iterate(obj)
             lb = obj.problem.lb;
-            ub = problem.ub;
+            ub = obj.problem.ub;
             dim = obj.problem.dim;
             N = obj.config.populationSize;
             MaxIter = obj.config.maxIterations;
-            t = obj.currentIteration + 1;
+            t = double(obj.currentIteration) + 1;
 
             alpha = 1 - t / MaxIter;
             Tf = cos((pi / 2) * (t / MaxIter)^2);
@@ -128,11 +127,11 @@ classdef CPO < BaseAlgorithm
         end
 
         function tf = shouldStop(obj)
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function Xnew = visualDefense(obj, i, N, dim, alpha)
             j = randi(N);
             while j == i
@@ -167,7 +166,7 @@ classdef CPO < BaseAlgorithm
             Xnew = obj.positions(i, :) + rand(1, dim) .* step;
         end
 
-        function Xnew = physicalAttack(obj, i, N, ~, alpha, Tf)
+        function Xnew = physicalAttack(obj, i, N, dim, alpha, Tf)
             j = randi(N);
             while j == i
                 j = randi(N);

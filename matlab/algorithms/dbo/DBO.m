@@ -36,7 +36,6 @@ classdef DBO < BaseAlgorithm
         positions            % 种群位置矩阵 (N x Dim)
         fitness              % 适应度向量 (N x 1)
         bestPosition         % 最优位置 (1 x Dim)
-        bestFitness          % 最优适应度
         Xworst               % 最差位置 (1 x Dim)
         worstFitness         % 最差适应度
     end
@@ -92,10 +91,10 @@ classdef DBO < BaseAlgorithm
 
         function iterate(obj)
             lb = obj.problem.lb;
-            ub = problem.ub;
+            ub = obj.problem.ub;
             N = obj.config.populationSize;
             MaxIter = obj.config.maxIterations;
-            t = obj.currentIteration + 1;
+            t = double(obj.currentIteration) + 1;
 
             for i = 1:N
                 if rand() < 0.8
@@ -172,11 +171,11 @@ classdef DBO < BaseAlgorithm
         end
 
         function tf = shouldStop(obj)
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function validatedConfig = validateConfig(obj, configStruct)
             validatedConfig = struct();
             

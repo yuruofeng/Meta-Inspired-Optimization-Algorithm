@@ -42,7 +42,6 @@ classdef ACO < BaseAlgorithm
         weights             % 权重向量 (K x 1)
         sigma               % 标准差向量 (K x Dim)
         bestPosition        % 最优位置 (1 x Dim)
-        bestFitness         % 最优适应度
     end
 
     properties (Constant)
@@ -149,11 +148,11 @@ classdef ACO < BaseAlgorithm
         end
 
         function tf = shouldStop(obj)
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function weights = calculateWeights(obj, K)
             q = obj.config.q;
             ranks = (1:K)';

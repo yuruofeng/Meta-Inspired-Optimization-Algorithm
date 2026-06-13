@@ -86,7 +86,7 @@ classdef TLBO < BaseAlgorithm
 
         function iterate(obj)
             lb = obj.problem.lb;
-            ub = problem.ub;
+            ub = obj.problem.ub;
             dim = obj.problem.dim;
             N = obj.config.populationSize;
 
@@ -149,11 +149,11 @@ classdef TLBO < BaseAlgorithm
         end
 
         function tf = shouldStop(obj)
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function validatedConfig = validateConfig(obj, configStruct)
             validatedConfig = struct();
             

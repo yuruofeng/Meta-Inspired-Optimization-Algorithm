@@ -54,6 +54,7 @@ export interface Algorithm {
     year: number;
     doi?: string;
     title?: string;
+    url?: string;
   };
   complexity?: {
     time: string;

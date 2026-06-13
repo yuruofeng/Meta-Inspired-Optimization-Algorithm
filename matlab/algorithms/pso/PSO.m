@@ -158,7 +158,7 @@ classdef PSO < BaseAlgorithm
             dim = obj.problem.dim;
             N = obj.config.populationSize;
             MaxIter = obj.config.maxIterations;
-            currentIter = obj.currentIteration + 1;
+            currentIter = double(obj.currentIteration) + 1;
 
             if obj.config.useLinearW
                 w = obj.config.wMax - (obj.config.wMax - obj.config.wMin) * ...
@@ -210,11 +210,11 @@ classdef PSO < BaseAlgorithm
             % 输出参数:
             %   tf - true表示停止，false表示继续
 
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function validatedConfig = validateConfig(obj, configStruct)
             % validateConfig 验证并规范化配置参数
             %

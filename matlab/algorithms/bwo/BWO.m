@@ -34,7 +34,6 @@ classdef BWO < BaseAlgorithm
         positions            % 白鲸位置矩阵 (N x Dim)
         fitness              % 适应度向量 (N x 1)
         bestPosition         % 最优位置 (1 x Dim)
-        bestFitness          % 最优适应度
     end
 
     properties (Constant)
@@ -86,11 +85,11 @@ classdef BWO < BaseAlgorithm
 
         function iterate(obj)
             lb = obj.problem.lb;
-            ub = problem.ub;
+            ub = obj.problem.ub;
             dim = obj.problem.dim;
             N = obj.config.populationSize;
             MaxIter = obj.config.maxIterations;
-            t = obj.currentIteration + 1;
+            t = double(obj.currentIteration) + 1;
 
             for i = 1:N
                 if rand() < 0.5
@@ -161,11 +160,11 @@ classdef BWO < BaseAlgorithm
         end
 
         function tf = shouldStop(obj)
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function steps = levyFlight(obj, dim)
             beta = 1.5;
             sigma = (gamma(1 + beta) * sin(pi * beta / 2) / ...

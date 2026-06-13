@@ -89,7 +89,7 @@ classdef CS < BaseAlgorithm
 
         function iterate(obj)
             lb = obj.problem.lb;
-            ub = problem.ub;
+            ub = obj.problem.ub;
             dim = obj.problem.dim;
             N = obj.config.populationSize;
             pa = obj.config.pa;
@@ -147,11 +147,11 @@ classdef CS < BaseAlgorithm
         end
 
         function tf = shouldStop(obj)
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function steps = levyFlight(obj, dim)
             beta = 1.5;
             sigma = (gamma(1 + beta) * sin(pi * beta / 2) / ...

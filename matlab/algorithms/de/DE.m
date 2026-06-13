@@ -166,11 +166,11 @@ classdef DE < BaseAlgorithm
             % 输出参数:
             %   tf - true表示停止，false表示继续
 
-            tf = obj.currentIteration >= obj.config.maxIterations;
+            tf = double(obj.currentIteration) >= obj.config.maxIterations;
         end
     end
 
-    methods (Access = protected)
+    methods
         function mutant = mutation(obj, targetIdx, strategy, F)
             % mutation 变异操作
             %
